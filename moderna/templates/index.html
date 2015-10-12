@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load i18n  mezzanine_tags staticfiles%}
+{% block meta_title %}{% trans "Home" %}{% endblock %}
+{% block title %}{% trans "Home" %}{% endblock %}
+{% block breadcrumb_wrapper %}
+{% endblock %}
+
+{% block title_wrapper %}
+{% endblock %}
+
+{% block breadcrumb_menu %}
+<li class="active">{% trans "Home" %}</li>
+{% endblock %}
+
+
+{% block all_content %}
+<section id="{% block section_id %}featured{% endblock %}">
+{% block left_wrapper %}
+{% endblock %}
+
+
+{% block main_wrapper %}
+<div class="col-md-{% block main_col_size %}none{% endblock %} {% block main_class %}{% endblock %}">
+{% block main %}
+
+
+<!-- start slider -->
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-12">
+	<!-- Slider -->
+        <div id="main-slider" class="flexslider">
+            <ul class="slides">
+              <li>
+                <img src="{% static "img/slides/large_lcs.jpg" %}" alt=""  height="500"/>
+                <div class="flex-caption">
+                    <h3>Yolobid</h3>
+					<p>Esports Analytics</p>
+					<a href="/about-us" class="btn btn-theme">Learn More</a>
+                </div>
+              </li>
+              <li>
+                <img src="{% static "img/slides/lcs_madison_square_garden.jpg" %}" alt="" height="500"/>
+                <div class="flex-caption">
+                    <h3>Yolobid</h3>
+					<p>Esports Analytics</p>
+					<a href="/about-us" class="btn btn-theme">Learn More</a>
+                </div>
+              </li>
+              <li>
+                <img src="{% static "img/slides/cs_kato.jpg" %}" alt="" height="500"/>
+                <div class="flex-caption">
+                    <h3>Yolobid</h3>
+					<p>Esports Analytics</p>
+					<a href="/about-us" class="btn btn-theme">Learn More</a>
+                </div>
+              </li>
+            </ul>
+        </div>
+	<!-- end slider -->
+			</div>
+		</div>
+	</div>	
+
+{% endblock %}
+</div>
+{% endblock %}
+{% block right_wrapper %}
+{% endblock %}
+</section>
+<section class="callaction">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="big-cta">
+					<div class="cta-text">
+						<h2><span>Data Science</span> for Esports</h2>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</section>
+<section id="content">
+	<div class="container">
+
+
+
+        {% load blog_tags keyword_tags i18n %}
+        {% blog_recent_posts 5 as recent_posts %}
+        {% if recent_posts %}
+        <h3>{% trans "Articles" %}</h3>
+        <div class="panel-group" id="accordion">
+            {% for recent_post in recent_posts %}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#accordion{{recent_post.id}}">
+                                {{ recent_post.title }}
+                            </a>
+                        </h4>
+                    </div>
+
+                    <div id="accordion{{recent_post.id}}" class="panel-collapse collapse in">
+                        <div class="panel-body">
+                            <p>{{ recent_post.description}} <a href="{{ recent_post.get_absolute_url }}">Learn more.</a></p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+	</div>
+	</section>
+
+{% endblock %}
