@@ -10,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 SITE_TITLE = 'yolobid'
 SITE_TAGLINE = 'esports analytics'
+GOOGLE_ANALYTICS_ID = 'UA-68697816-1'
 
 # The following settings are already defined with default values in
 # the ``defaults.py`` module within each of Mezzanine's apps, but are
@@ -80,7 +81,7 @@ SITE_TAGLINE = 'esports analytics'
 
 # Setting to turn on featured images for blog posts. Defaults to False.
 #
-# BLOG_USE_FEATURED_IMAGE = True
+BLOG_USE_FEATURED_IMAGE = True
 
 # If True, the django-modeltranslation will be added to the
 # INSTALLED_APPS setting.
