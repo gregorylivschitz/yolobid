@@ -150,13 +150,13 @@
     {% include "includes/user_panel.html" %}
     {% endnevercache %}
 	<aside class="right-sidebar">
-   
+
     {% block right_panel %}
-    {% ifinstalled mezzanine.twitter %}
-    {% include "twitter/tweets.html" %}
-    {% endifinstalled %}
+    <!--{% ifinstalled mezzanine.twitter %}-->
+    <!--{% include "twitter/tweets.html" %}-->
+    <!--{% endifinstalled %}-->
     {% endblock %}
-    
+
 	</aside>
 </div>
 {% endblock %}

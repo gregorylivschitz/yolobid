@@ -141,6 +141,7 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # DATABASES #
 #############
 
+# for psycopg2 on windows do this http://www.stickpeople.com/projects/python/win-psycopg/
 DATABASES = {
     "default": {
         # Add "postgresql_psycopg2", "mysql", "sqlite3" or "oracle".
