@@ -11,6 +11,11 @@ from django.utils.translation import ugettext_lazy as _
 SITE_TITLE = 'yolobid'
 SITE_TAGLINE = 'esports analytics'
 GOOGLE_ANALYTICS_ID = 'UA-68697816-1'
+BLOG_SLUG = "articles"
+
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 10
+}
 
 # The following settings are already defined with default values in
 # the ``defaults.py`` module within each of Mezzanine's apps, but are
@@ -209,7 +214,9 @@ TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 ################
 
 INSTALLED_APPS = (
+    "dashboard",
     "moderna",
+    "rest_framework",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
