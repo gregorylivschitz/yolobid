@@ -14,8 +14,8 @@ from django.db import models
 
 class DataSource(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=-1, blank=True, null=True)
-    external_location = models.CharField(max_length=-1, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    external_location = models.CharField(max_length=255, blank=True, null=True)
     tournament = models.ForeignKey('Tournament', blank=True, null=True)
 
     class Meta:
@@ -37,8 +37,8 @@ class Game(models.Model):
 
 class Player(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=-1, blank=True, null=True)
-    external_id = models.CharField(max_length=-1, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    external_id = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -47,7 +47,7 @@ class Player(models.Model):
 
 class PlayerStats(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    champion_played = models.CharField(max_length=-1, blank=True, null=True)
+    champion_played = models.CharField(max_length=255, blank=True, null=True)
     kills = models.IntegerField(blank=True, null=True)
     deaths = models.IntegerField(blank=True, null=True)
     assists = models.IntegerField(blank=True, null=True)
@@ -71,7 +71,7 @@ class PlayerStatsDf(models.Model):
     game_id = models.BigIntegerField(blank=True, null=True)
     game_length_minutes = models.FloatField(blank=True, null=True)
     gold = models.FloatField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, null=True)
+    id = models.BigIntegerField(blank=True, primary_key=True)
     kills = models.BigIntegerField(blank=True, null=True)
     minions_killed = models.BigIntegerField(blank=True, null=True)
     player_id = models.BigIntegerField(blank=True, null=True)
@@ -92,7 +92,7 @@ class ProcessedPlayerStatsDf(models.Model):
     game_id = models.BigIntegerField(blank=True, null=True)
     game_length_minutes = models.FloatField(blank=True, null=True)
     gold = models.FloatField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, null=True)
+    id = models.BigIntegerField(blank=True, primary_key=True)
     kills = models.BigIntegerField(blank=True, null=True)
     minions_killed = models.BigIntegerField(blank=True, null=True)
     player_id = models.BigIntegerField(blank=True, null=True)
@@ -144,7 +144,7 @@ class ProcessedTeamStatsDf(models.Model):
     game_length_minutes = models.FloatField(blank=True, null=True)
     game_number = models.BigIntegerField(blank=True, null=True)
     gold = models.TextField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, null=True)
+    id = models.BigIntegerField(blank=True, primary_key=True)
     kills = models.BigIntegerField(blank=True, null=True)
     minions_killed = models.BigIntegerField(blank=True, null=True)
     team_id = models.BigIntegerField(blank=True, null=True)
@@ -273,8 +273,8 @@ class ProcessedTeamStatsDf(models.Model):
 
 class Team(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=-1, blank=True, null=True)
-    external_name = models.CharField(max_length=-1, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    external_name = models.CharField(max_length=255, blank=True, null=True)
     external_id = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -293,9 +293,9 @@ class TeamPlayer(models.Model):
 
 class TeamStats(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    total_gold = models.CharField(max_length=-1, blank=True, null=True)
+    total_gold = models.CharField(max_length=255, blank=True, null=True)
     won = models.NullBooleanField()
-    color = models.CharField(max_length=-1, blank=True, null=True)
+    color = models.CharField(max_length=255, blank=True, null=True)
     deaths = models.IntegerField(blank=True, null=True)
     minions_killed = models.IntegerField(blank=True, null=True)
     assists = models.IntegerField(blank=True, null=True)
@@ -325,7 +325,7 @@ class TeamStatsDf(models.Model):
     game_length_minutes = models.FloatField(blank=True, null=True)
     game_number = models.BigIntegerField(blank=True, null=True)
     gold = models.TextField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, null=True)
+    id = models.BigIntegerField(blank=True, primary_key=True)
     kills = models.BigIntegerField(blank=True, null=True)
     minions_killed = models.BigIntegerField(blank=True, null=True)
     team_id = models.BigIntegerField(blank=True, null=True)
@@ -341,10 +341,10 @@ class TeamStatsDf(models.Model):
 
 class Tournament(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=-1, blank=True, null=True)
-    region = models.CharField(max_length=-1, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    region = models.CharField(max_length=255, blank=True, null=True)
     year = models.IntegerField(blank=True, null=True)
-    season = models.CharField(max_length=-1, blank=True, null=True)
+    season = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False
