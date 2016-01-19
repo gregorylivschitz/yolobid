@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container table-responsive">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>team_name</th>
+            <th>kills</th>
+            <th>assists</th>
+            <th>gold</th>
+            <th>deaths</th>
+            <th>barons</th>
+            <th>dragons</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for team_stat in object_list %}
+            <tr>
+                <td>{{ team_stat.team }}</td>
+                <td>{{ team_stat.kills }}</td>
+                <td>{{ team_stat.assists }}</td>
+                <td>{{ team_stat.gold }}</td>
+                <td>{{ team_stat.death }}</td>
+                <td>{{ team_stat.baron }}</td>
+                <td>{{ team_stat.dragons }}</td>
+            </tr>
+        {% empty %}
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+            <td>None</td>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="container">
+    <form method="post">
+        {% csrf_token %}
+        {% crispy form form.helper %}
+    </form>
+</div>
+{% endblock content %}

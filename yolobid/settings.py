@@ -17,6 +17,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
+#crisp-forms setup
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
 # The following settings are already defined with default values in
 # the ``defaults.py`` module within each of Mezzanine's apps, but are
 # common enough to be put here, commented out, for conveniently
@@ -234,6 +237,7 @@ INSTALLED_APPS = (
     "mezzanine.forms",
     "mezzanine.galleries",
     "mezzanine.twitter",
+    "crispy_forms",
     # "mezzanine.accounts",
     # "mezzanine.mobile",
 )
