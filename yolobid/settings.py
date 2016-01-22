@@ -20,6 +20,7 @@ REST_FRAMEWORK = {
 #crisp-forms setup
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
+
 # The following settings are already defined with default values in
 # the ``defaults.py`` module within each of Mezzanine's apps, but are
 # common enough to be put here, commented out, for conveniently
@@ -217,6 +218,7 @@ TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 ################
 
 INSTALLED_APPS = (
+    "django_tables2",
     "dashboard",
     "moderna",
     "rest_framework",
@@ -256,6 +258,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.tz",
     "mezzanine.conf.context_processors.settings",
     "mezzanine.pages.context_processors.page",
+    "django.core.context_processors.request",
 )
 
 # List of middleware classes to use. Order is important; in the request phase,

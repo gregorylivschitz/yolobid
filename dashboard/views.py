@@ -1,8 +1,14 @@
+import logging
+from django.http import HttpResponse
 from django.views.generic import TemplateView, FormView, ListView, View
+from django_filters.views import FilterView
+from django_tables2 import SingleTableView, RequestConfig
+from dashboard.filters import TeamStatsFilter
 from dashboard.forms import DashboardForm
-from dashboard.models import DataSource, TeamStats
+from dashboard.models import DataSource, TeamStats, ProcessedTeamStatsDf, TeamStatsDf
 from rest_framework import viewsets
 from dashboard.serializers import DataSourceSerializer
+from dashboard.tables import TeamStatsTable
 
 
 class DataSourceViewSet(viewsets.ModelViewSet):
@@ -42,9 +48,53 @@ class DashboardListView(ListView):
 class DashboardListFormView(View):
 
     def get(self, request, *args, **kwargs):
-        view = DashboardListView.as_view()
+        view = DashBoardTableView.as_view()
         return view(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         view = DashboardView.as_view()
         return view(request, *args, **kwargs)
+
+
+class PagedFilteredTableView(SingleTableView):
+    filter_class = None
+    formhelper_class = None
+    context_filter_name = 'filter'
+
+    def get_queryset(self, **kwargs):
+        qs = super(PagedFilteredTableView, self).get_queryset()
+        self.filter = self.filter_class(self.request.GET, queryset=qs)
+        self.filter.form.helper = self.formhelper_class()
+        return self.filter.qs
+
+    def get_table(self, **kwargs):
+        table = super(PagedFilteredTableView, self).get_table()
+        RequestConfig(self.request, paginate={'page': self.kwargs['page'],
+                            "per_page": self.paginate_by}).configure(table)
+        return table
+
+    def get_context_data(self, **kwargs):
+        context = super(PagedFilteredTableView, self).get_context_data()
+        context[self.context_filter_name] = self.filter
+        return context
+
+
+class FilterTableView(FilterView, SingleTableView):
+    # Django tables 2 needs data this returns all the data filtered.
+    def get_table_data(self):
+        return self.object_list
+
+
+class DashBoardTableView(FilterTableView):
+    model = TeamStatsDf
+    table_class = TeamStatsTable
+    filter_class = TeamStatsFilter
+    template_name = "dashboard.html"
+
+    def get_table(self):
+        table = super(DashBoardTableView, self).get_table()
+        columns = self.request.GET.getlist('column')
+        if columns:
+            tuple_to_exclude = tuple(set(table.columns.names()) - set(columns))
+            table.exclude = tuple_to_exclude
+        return table
