@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% crispy filter.form filter.form.helper %}
+{% load render_table from django_tables2 %}
+{% block content %}
+{% block left_panel %}
+{% endblock %}
+{% block left_wrapper %}
+{% endblock %}
+{% block main_wrapper %}
+<div>
+    {% render_table table %}
+</div>
+
+{% endblock main_wrapper %}
+{% endblock content %}

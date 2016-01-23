@@ -89,7 +89,7 @@ class DashBoardTableView(FilterTableView):
     model = TeamStatsDf
     table_class = TeamStatsTable
     filter_class = TeamStatsFilter
-    template_name = "dashboard.html"
+    template_name = "dashboard_table.html"
 
     def get_table(self):
         table = super(DashBoardTableView, self).get_table()
@@ -98,3 +98,6 @@ class DashBoardTableView(FilterTableView):
             tuple_to_exclude = tuple(set(table.columns.names()) - set(columns))
             table.exclude = tuple_to_exclude
         return table
+
+class DashBoardView(TemplateView):
+    template_name = "dashboard.html"

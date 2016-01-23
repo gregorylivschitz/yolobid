@@ -8,9 +8,44 @@
 {% block left_wrapper %}
 {% endblock %}
 {% block main_wrapper %}
-<div>
-    {% render_table table %}
+<div class="container col-md-4">
+    <div class="panel panel-default ">
+        <div class="panel-heading">
+            <h3 class="panel-title">Select predictors to use</h3>
+        </div>
+        <div class="panel-body">
+            <div class="container">
+                <select id="select-predictors" multiple="multiple">
+                    <option value="cheese">Cheese</option>
+                    <option value="tomatoes">Tomatoes</option>
+                    <option value="mozarella">Mozzarella</option>
+                    <option value="mushrooms">Mushrooms</option>
+                    <option value="pepperoni">Pepperoni</option>
+                    <option value="onions">Onions</option>
+                    <option value="onions">Onions</option>
+                    <option value="onions">Onions</option>
+                    <option value="onions">Onions</option>
+                </select>
+            </div>
+            <div class="container">
+                <button class="btn btn-blue" id="select-default-predictors-button">Select default predictors.</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Initialize the plugin: -->
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#select-predictors').multiselect({
+            buttonClass: 'btn btn-blue',
+            includeSelectAllOption: true
+        });
+        $('#select-default-predictors-button').on('click', function() {
+            $('#select-predictors').multiselect('select', ['mushrooms', 'mozarella']);
+        });
+    });
+</script>
 
 {% endblock main_wrapper %}
 {% endblock content %}
