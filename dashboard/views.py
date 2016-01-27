@@ -3,13 +3,16 @@ from django.http import HttpResponse
 from django.views.generic import TemplateView, FormView, ListView, View
 from django_filters.views import FilterView
 from django_tables2 import SingleTableView, RequestConfig
+from sqlalchemy import create_engine
 from dashboard.filters import TeamStatsFilter
-from dashboard.forms import DashboardForm
+from dashboard.forms import DashboardForm, DashboardTeamForm, DashboardPlayerForm
 from dashboard.models import DataSource, TeamStats, ProcessedTeamStatsDf, TeamStatsDf
 from rest_framework import viewsets
+from dashboard.multiforms import MultiFormsView
 from dashboard.serializers import DataSourceSerializer
+from dashboard.service.predict_team_outcome import PredictTeamWin
 from dashboard.tables import TeamStatsTable
-
+from django.conf import settings
 
 class DataSourceViewSet(viewsets.ModelViewSet):
     """
@@ -99,5 +102,45 @@ class DashBoardTableView(FilterTableView):
             table.exclude = tuple_to_exclude
         return table
 
+
 class DashBoardView(TemplateView):
     template_name = "dashboard.html"
+
+
+class TeamPredictions(TemplateView):
+    template_name = "team_predictions.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(TeamPredictions, self).get_context_data()
+        databases = getattr(settings, "DATABASES", None)
+        database = databases['default']
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(database['USER'], database['PASSWORD'],
+                                                                    database['HOST'], database['PORT'],
+                                                                    database['NAME']), echo=False)
+        predict = PredictTeamWin(engine,  'SK TELECOM T1', 'COUNTER LOGIC GAMING')
+        predict_single_game = predict.predict_on_single_game()
+        winning_percent = predict_single_game['SK TELECOM T1']
+        context['team_name'] = 'SK TELECOM T1'
+        context['winning_percent'] = winning_percent
+        return context
+
+
+class DashboardViewTest(MultiFormsView):
+    template_name = 'dashboard_test.html'
+    form_classes = {'submit_team': DashboardTeamForm,
+                    'submit_player': DashboardPlayerForm}
+    # form_classes = {'SUBMITTEAM': DashboardTeamForm,
+    #                 'SUBMITPLAYER': DashboardPlayerForm}
+    success_url = '/thanks/'
+
+    # def get_dashboard_team_initial(self):
+    #     return {'example':'stuff'}
+    #
+    # def get_dashboard_player_initial(self):
+    #     return {'example':'stuff'}
+
+    def dashboard_team_form_valid(self, form):
+        return form.dashboard_team(self.request, redirect_url=self.get_success_url())
+
+    def dashboard_player_form_valid(self, form):
+        return form.dashboard_player(self.request, redirect_url=self.get_success_url())

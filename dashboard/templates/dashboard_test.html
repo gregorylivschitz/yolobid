@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% crispy filter.form filter.form.helper %}
+{% load render_table from django_tables2 %}
+{% block content %}
+{% block left_panel %}
+{% endblock %}
+{% block left_wrapper %}
+{% endblock %}
+{% block main_wrapper %}
+<div class="container">
+    <div class="row">
+        <div class="container col-md-4">
+            <div class="panel panel-default ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Predict Team Outcome</h3>
+                </div>
+                <div class="panel-body">
+                    {% csrf_token %}
+                    {% crispy forms.submit_team %}
+                </div>
+            </div>
+        </div>
+        <div class="container col-md-offset-4 col-md-4">
+            <div class="panel panel-default ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Predict Player Stats</h3>
+                </div>
+                <div class="panel-body">
+                    {% csrf_token %}
+                    {% crispy forms.submit_player %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock main_wrapper %}
+{% endblock content %}

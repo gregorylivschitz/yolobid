@@ -1,0 +1,35 @@
+        <div class="container col-md-4">
+            <div class="panel panel-default ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Team Table</h3>
+                </div>
+                <div class="panel-body">
+                    <form  action="table" method="get">
+                        <div class="form-group">
+                            <p>Select the columns you want in your data</p>
+                            <select id="select-columns-team" multiple="multiple">
+                                <option value="Eff Rating">Eff Rating</option>
+                                <option value="Csum Kills">Csum Kills</option>
+                                <option value="Kills">Kills</option>
+                                <option value="Assists">Assists</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <p>Filter on the by column and value</p>
+                            <div class="row">
+                                <select id="select-columns-filters">
+                                    <option value="Team Name">Team Name</option>
+                                    <option value="Team Id">Team Id</option>
+                                    <option value="Kills">Kills</option>
+                                    <option value="Assists">Assists</option>
+                                </select>
+                                <div class="container col-md-6">
+                                    <input type="text" class="form-control" id="input-filter-value" placeholder="Input filter value">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-theme">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>

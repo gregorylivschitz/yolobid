@@ -7,3 +7,21 @@
      max-height: 500px;
      display: block;
 }
+
+.btn-dashboard-red {
+  border:1px solid #A80818;
+  color:#fff;
+  background: #A80818;
+}
+.btn-dashboard-red:hover,.btn-dashboard-red:focus,.btn-dashboard-red:active  {
+  background: #970715;
+  color:#fff;
+}
+
+.no-gutter [class*="-6"] {
+    padding-left:0;
+}
+
+.asteriskField {
+    display: none;
+}
