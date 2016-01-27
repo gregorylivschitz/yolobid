@@ -44,7 +44,7 @@ class DashboardTeamForm(forms.Form):
         self.helper.form_id = 'predict-team-outcome'
         self.helper.form_class = 'predictTeamOutCome'
         self.helper.form_method = 'post'
-        self.helper.add_input(Submit('blah', 'Submit', css_class='btn btn-theme'))
+        self.helper.add_input(Submit('submit_team', 'Submit', css_class='btn btn-theme'))
 
 
 class DashboardPlayerForm(forms.Form):
