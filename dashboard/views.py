@@ -143,11 +143,7 @@ class DashboardViewTest(MultiFormsView):
             blue_team = form.cleaned_data['blue_team'].name
             red_team = form.cleaned_data['red_team'].name
             team_predictor_values = form.cleaned_data['team_predictor_values']
-            print(team_predictor_values)
-            if team_predictor_values:
-                predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values)
-            else:
-                predict = PredictTeamWin(engine, blue_team, red_team)
+            predict = PredictTeamWin(engine, blue_team, red_team)
             predict_single_game = predict.predict_on_single_game()
             morris_chart_data = []
             for k, v in predict_single_game.items():
@@ -156,13 +152,29 @@ class DashboardViewTest(MultiFormsView):
             response_object = {'data': morris_chart_data}
             return JsonResponse(response_object)
         else:
-
             return HttpResponseRedirect(self.get_success_url())
 
     def submit_player_form_valid(self, form):
         engine = self.get_engine()
-        predict_player = PredictPlayerStats(engine, 'Doublelift', 'kills')
-        return form.submit_player(self.request, redirect_url=self.get_success_url())
+        player_name = form.cleaned_data['player_name'].name
+        player_stats_to_predict = form.cleaned_data['player_stats_to_predict']
+        player_predictor_values = form.cleaned_data['player_predictor_values']
+        predicted_stats = self.predict_multiple_stats(engine, player_name, player_stats_to_predict, player_predictor_values)
+        morris_chart_data = []
+        for k, v in predicted_stats.items():
+            single_chart_point = {'label': k, 'value': v[player_name][0]}
+            morris_chart_data.append(single_chart_point)
+        response_object = {'data': morris_chart_data}
+        return JsonResponse(response_object)
+
+    def predict_multiple_stats(self, engine, player, stats, player_predictor_values):
+        stats_dict = {}
+        stats = tuple(stats)
+        for stat in stats:
+            predict_player = PredictPlayerStats(engine, player, stat)
+            predicted_player = predict_player.predict_player_stat()
+            stats_dict[stat] = predicted_player
+        return stats_dict
 
     @staticmethod
     def get_engine():

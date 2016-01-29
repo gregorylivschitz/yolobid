@@ -24,7 +24,9 @@ class PredictTeamWin:
         self.engine = engine
         self.team_stats_table_name = 'team_stats_df'
         self.processed_team_stats_table_name = 'processed_team_stats_df'
+
         self.predictor_stats = predictor_stats
+
         self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'total_gold',
                          'k_a', 'a_over_k')
         self._process_team_stats_and_train()

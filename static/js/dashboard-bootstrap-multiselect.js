@@ -29,7 +29,7 @@ $(document).ready(function() {
         buttonClass: 'btn btn-theme',
         buttonContainer: '<div class="col-md-4"/>'
     });
-    var ajaxCallWithButton = function(form_id, form_button_id, chart_id){
+    var ajaxCallTeamWithButton = function(form_id, form_button_id, chart_id){
         $(form_id).on('submit', function(e) {
             e.preventDefault();
             var btnName = $(form_button_id).attr('name');
@@ -40,7 +40,7 @@ $(document).ready(function() {
                 type: "POST",
                 data: $(this).serialize() + btnData,
                 success: function (data) {
-                    $("#team-donut-chart").html("");
+                    $(chart_id).html("");
                     Morris.Donut({
                         element: 'team-donut-chart',
                         data: data['data'],
@@ -53,7 +53,31 @@ $(document).ready(function() {
             });
         });
     }
-    ajaxCallWithButton('#predict-team-outcome', '#submit-id-submit_team', 'team-donut-chart')
+    var ajaxCallPlayerWithButton = function(form_id, form_button_id, chart_id){
+        $(form_id).on('submit', function(e) {
+            e.preventDefault();
+            var btnName = $(form_button_id).attr('name');
+            var btnVal = $(form_button_id).val();
+            var btnData = '&'+btnName+'='+btnVal;
+            $.ajax({
+                url : "http://127.0.0.1:8000/dashboard_test/",
+                type: "POST",
+                data: $(this).serialize() + btnData,
+                success: function (data) {
+                    $(chart_id).html("");
+                    Morris.Donut({
+                        element: 'player-donut-chart',
+                        data: data['data'],
+                        formatter: function (y, data) { return y.toFixed(2) },
+                    });},
+                error: function (jXHR, textStatus, errorThrown) {
+                    alert(errorThrown);
+                }
+            });
+        });
+    }
+    ajaxCallTeamWithButton('#predict-team-outcome', '#submit-id-submit_team', '#team-donut-chart')
+    ajaxCallPlayerWithButton('#predict-player-outcome', '#submit-id-submit_player', '#player-donut-chart')
 });
 
 

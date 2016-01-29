@@ -16,7 +16,10 @@ class PredictPlayerStats:
         self.engine = engine
         self.player_name = player_name
         self.stat_to_predict = stat_to_predict
-        self.predictor_stats = predictor_stats
+        if predictor_stats:
+            self.predictor_stats = predictor_stats
+        else:
+            self.predictor_stats = ('csum_prev_min_kills', 'csum_prev_min_minions_killed', 'csum_prev_min_gold')
         self.player_stats_table_name = 'player_stats_df'
         self.processed_player_stars_table_name = 'processed_player_stats_df'
         self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold')
