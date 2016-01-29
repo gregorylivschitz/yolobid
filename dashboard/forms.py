@@ -33,8 +33,10 @@ class NameModelChoiceField(ModelChoiceField):
 class DashboardTeamForm(forms.Form):
     choices_list = TeamStatsDf._meta.get_all_field_names()
     choices = [(choice, choice) for choice in choices_list]
-    blue_team = NameModelChoiceField(label="", empty_label="Select Blue Team", queryset=Team.objects.all())
-    red_team = NameModelChoiceField(label="", empty_label="Select Red Team", queryset=Team.objects.all())
+    blue_team = NameModelChoiceField(label="", empty_label="Select Blue Team", queryset=Team.objects.all(),
+                                     to_field_name='name')
+    red_team = NameModelChoiceField(label="", empty_label="Select Red Team", queryset=Team.objects.all(),
+                                    to_field_name='name')
     team_predictor_values = forms.MultipleChoiceField(label="Select Predictors(Advance Option)", choices=choices,
                                                  required=False)
 
@@ -63,5 +65,5 @@ class DashboardPlayerForm(forms.Form):
         self.helper.form_id = 'predict-player-outcome'
         self.helper.form_class = 'predictPlayerOutCome'
         self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit_player', 'SUBMIT', css_class='btn btn-theme'))
+        self.helper.add_input(Submit('submit_player', 'Submit', css_class='btn btn-theme'))
 

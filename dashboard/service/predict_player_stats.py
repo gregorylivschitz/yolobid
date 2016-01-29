@@ -2,7 +2,6 @@ from operator import itemgetter
 from decimal import Decimal
 import numpy
 import pandas
-from sqlalchemy.orm import sessionmaker
 # from entities.league_of_legends_entities import Game, Player
 from statsmodels.discrete.discrete_model import Poisson
 from dashboard.models import Game, Player
@@ -17,8 +16,6 @@ class PredictPlayerStats:
         self.engine = engine
         self.player_name = player_name
         self.stat_to_predict = stat_to_predict
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
         self.predictor_stats = predictor_stats
         self.player_stats_table_name = 'player_stats_df'
         self.processed_player_stars_table_name = 'processed_player_stats_df'
@@ -75,16 +72,16 @@ class PredictPlayerStats:
         self.pos_result = self.poisson.fit()
 
     def _get_game_ids_from_database(self):
-        game_ids_row = self.session.query(Game.id)
-        game_ids = [game[0] for game in game_ids_row]
+        game_ids_row = Game.objects.values_list('id', flat=True)
+        game_ids = [game for game in game_ids_row]
         return game_ids
 
     def _get_game_by_ids(self, game_ids):
-        return self.session.query(Game).filter(Game.id.in_(game_ids))
+        return Game.objects.get(pk=game_ids)
 
-    def _get_player_id_by_player_name(self, team_name):
-        team = self.session.query(Player).filter(Player.name.__eq__(team_name))
-        return team[0].id
+    def _get_player_id_by_player_name(self, player_name):
+        player = Player.objects.filter(name=player_name)
+        return player[0].id
 
     def _get_processed_player_stats_in_df(self):
         game_ids = self._get_game_ids_from_database()

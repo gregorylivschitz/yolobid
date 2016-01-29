@@ -1,5 +1,5 @@
 import logging
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.generic import TemplateView, FormView, ListView, View
 from django_filters.views import FilterView
 from django_tables2 import SingleTableView, RequestConfig
@@ -10,6 +10,7 @@ from dashboard.models import DataSource, TeamStats, ProcessedTeamStatsDf, TeamSt
 from rest_framework import viewsets
 from dashboard.multiforms import MultiFormsView
 from dashboard.serializers import DataSourceSerializer
+from dashboard.service.predict_player_stats import PredictPlayerStats
 from dashboard.service.predict_team_outcome import PredictTeamWin
 from dashboard.tables import TeamStatsTable
 from django.conf import settings
@@ -129,9 +130,6 @@ class DashboardViewTest(MultiFormsView):
     template_name = 'dashboard_test.html'
     form_classes = {'submit_team': DashboardTeamForm,
                     'submit_player': DashboardPlayerForm}
-    # form_classes = {'SUBMITTEAM': DashboardTeamForm,
-    #                 'SUBMITPLAYER': DashboardPlayerForm}
-    success_url = '/thanks/'
 
     # def get_dashboard_team_initial(self):
     #     return {'example':'stuff'}
@@ -139,8 +137,38 @@ class DashboardViewTest(MultiFormsView):
     # def get_dashboard_player_initial(self):
     #     return {'example':'stuff'}
 
-    def dashboard_team_form_valid(self, form):
-        return form.dashboard_team(self.request, redirect_url=self.get_success_url())
+    def submit_team_form_valid(self, form):
+        if self.request.is_ajax():
+            engine = self.get_engine()
+            blue_team = form.cleaned_data['blue_team'].name
+            red_team = form.cleaned_data['red_team'].name
+            team_predictor_values = form.cleaned_data['team_predictor_values']
+            print(team_predictor_values)
+            if team_predictor_values:
+                predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values)
+            else:
+                predict = PredictTeamWin(engine, blue_team, red_team)
+            predict_single_game = predict.predict_on_single_game()
+            morris_chart_data = []
+            for k, v in predict_single_game.items():
+                single_chart_point = {'label': k, 'value': v}
+                morris_chart_data.append(single_chart_point)
+            response_object = {'data': morris_chart_data}
+            return JsonResponse(response_object)
+        else:
 
-    def dashboard_player_form_valid(self, form):
-        return form.dashboard_player(self.request, redirect_url=self.get_success_url())
+            return HttpResponseRedirect(self.get_success_url())
+
+    def submit_player_form_valid(self, form):
+        engine = self.get_engine()
+        predict_player = PredictPlayerStats(engine, 'Doublelift', 'kills')
+        return form.submit_player(self.request, redirect_url=self.get_success_url())
+
+    @staticmethod
+    def get_engine():
+        databases = getattr(settings, "DATABASES", None)
+        database = databases['default']
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(database['USER'], database['PASSWORD'],
+                                                                    database['HOST'], database['PORT'],
+                                                                    database['NAME']), echo=False)
+        return engine

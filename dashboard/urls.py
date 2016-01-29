@@ -16,6 +16,6 @@ urlpatterns = [
     # url(r'^dashboard/(?P<column>[a-zA-Z0-9-]+)$', DashBoardTableView.as_view(), name='dashboard'),
     url(r'^dashboard/table$', DashBoardTableView.as_view(), name='dashboard'),
     url(r'^dashboard/$', DashBoardView.as_view(), name='dashboard'),
-     url(r'^team_predictions/$', TeamPredictions.as_view(), name='dashboard'),
+    url(r'^team_predictions/$', TeamPredictions.as_view(), name='dashboard'),
     url(r'^dashboard_test/$', DashboardViewTest.as_view(), name='dashboard'),
 ]
