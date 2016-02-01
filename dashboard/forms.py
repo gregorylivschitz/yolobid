@@ -1,5 +1,6 @@
 from django.forms import ModelForm, ModelChoiceField
-from dashboard.models import Team, TeamStatsDf, Player, PlayerStatsDf, PlayerStats
+from dashboard.models import Team, TeamStatsDf, Player, PlayerStatsDf, PlayerStats, ProcessedTeamStatsDf, \
+    ProcessedPlayerStatsDf
 
 __author__ = 'glivschitz'
 
@@ -30,9 +31,17 @@ class NameModelChoiceField(ModelChoiceField):
         return obj.name
 
 
+def get_choices(ModelDF):
+    choices_list = ModelDF._meta.get_all_field_names()
+    choices = []
+    for choice in choices_list:
+        if 'csum_prev' in choice or 'eff' in choice:
+            choices.append((choice, choice))
+    return choices
+
+
 class DashboardTeamForm(forms.Form):
-    choices_list = TeamStatsDf._meta.get_all_field_names()
-    choices = [(choice, choice) for choice in choices_list]
+    choices = get_choices(ProcessedTeamStatsDf)
     blue_team = NameModelChoiceField(label="", empty_label="Select Blue Team", queryset=Team.objects.all(),
                                      to_field_name='name')
     red_team = NameModelChoiceField(label="", empty_label="Select Red Team", queryset=Team.objects.all(),
@@ -50,8 +59,7 @@ class DashboardTeamForm(forms.Form):
 
 
 class DashboardPlayerForm(forms.Form):
-    predictor_choices_list = PlayerStatsDf._meta.get_all_field_names()
-    predictor_choices = [(choice, choice) for choice in predictor_choices_list]
+    predictor_choices = get_choices(ProcessedPlayerStatsDf)
     player_stats_choices_list = PlayerStats._meta.get_all_field_names()
     player_choices = [(choice, choice) for choice in player_stats_choices_list]
     player_name = NameModelChoiceField(label="", empty_label="Select Player", queryset=Player.objects.all())

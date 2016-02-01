@@ -143,9 +143,11 @@ class DashboardViewTest(MultiFormsView):
             blue_team = form.cleaned_data['blue_team'].name
             red_team = form.cleaned_data['red_team'].name
             team_predictor_values = form.cleaned_data['team_predictor_values']
-            predict = PredictTeamWin(engine, blue_team, red_team)
+            print('predictor value {}'.format(team_predictor_values))
+            predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values)
             predict_single_game = predict.predict_on_single_game()
             morris_chart_data = []
+            print('making morris chart')
             for k, v in predict_single_game.items():
                 single_chart_point = {'label': k, 'value': v}
                 morris_chart_data.append(single_chart_point)
