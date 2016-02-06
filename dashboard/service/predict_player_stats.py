@@ -166,8 +166,7 @@ class PredictPlayerStats:
         players_stats = game.player_stats
         player_stats_list = []
         for player_stats in players_stats:
-            player_stats_dic = dict(player_stats.__dict__)
-            del player_stats_dic['_sa_instance_state']
+            player_stats_dic = dict(player_stats.values)
             player_stats_dic['game_length_minutes'] = float(game.game_length_minutes)
             player_stats_dic['gold'] = float(player_stats_dic['gold'])
             player_stats_dic['player_name'] = player_stats.player.name

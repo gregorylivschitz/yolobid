@@ -6,7 +6,8 @@ $(document).ready(function() {
     });
     $('#id_player_stats_to_predict').multiselect({
         buttonClass: 'btn btn-theme',
-        includeSelectAllOption: true
+        includeSelectAllOption: true,
+        enableCaseInsensitiveFiltering: true
     });
     $('#id_blue_team').multiselect({
         buttonClass: 'btn btn-blue',
@@ -18,12 +19,15 @@ $(document).ready(function() {
     });
     $('#id_player_name').multiselect({
         buttonClass: 'btn btn-theme',
+        enableCaseInsensitiveFiltering: true,
     });
     $('#id_player_predictor_values').multiselect({
         buttonClass: 'btn btn-theme',
+        enableCaseInsensitiveFiltering: true,
     });
     $('#select-columns-team').multiselect({
         buttonClass: 'btn btn-theme',
+        enableCaseInsensitiveFiltering: true,
     });
     $('#select-columns-filters').multiselect({
         buttonClass: 'btn btn-theme',

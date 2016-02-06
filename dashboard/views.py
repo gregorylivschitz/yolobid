@@ -131,12 +131,6 @@ class DashboardViewTest(MultiFormsView):
     form_classes = {'submit_team': DashboardTeamForm,
                     'submit_player': DashboardPlayerForm}
 
-    # def get_dashboard_team_initial(self):
-    #     return {'example':'stuff'}
-    #
-    # def get_dashboard_player_initial(self):
-    #     return {'example':'stuff'}
-
     def submit_team_form_valid(self, form):
         if self.request.is_ajax():
             engine = self.get_engine()
@@ -173,7 +167,7 @@ class DashboardViewTest(MultiFormsView):
         stats_dict = {}
         stats = tuple(stats)
         for stat in stats:
-            predict_player = PredictPlayerStats(engine, player, stat)
+            predict_player = PredictPlayerStats(engine, player, stat, player_predictor_values)
             predicted_player = predict_player.predict_player_stat()
             stats_dict[stat] = predicted_player
         return stats_dict

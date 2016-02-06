@@ -31,17 +31,29 @@ class NameModelChoiceField(ModelChoiceField):
         return obj.name
 
 
-def get_choices(ModelDF):
+def get_choices_for_predictors(ModelDF):
     choices_list = ModelDF._meta.get_all_field_names()
     choices = []
     for choice in choices_list:
-        if 'csum_prev' in choice or 'eff' in choice:
+        if ('csum_prev_min' in choice or 'eff' in choice) \
+                and 'game_number' not in choice and 'game_length' not in choice \
+                and 'csum_prev_minions_killed' != choice:
             choices.append((choice, choice))
     return choices
 
 
+# def get_choices_for_player_stats(ModelDF):
+#     choices_list = ModelDF._meta.get_all_field_names()
+#     choices = []
+#     for choice in choices_list:
+#         if ('csum_prev_min' in choice or 'eff' in choice) \
+#                 and 'game_number' not in choice and 'game_length' not in choice \
+#                 and 'csum_prev_minions_killed' != choice:
+#             choices.append((choice, choice))
+#     return choices
+
 class DashboardTeamForm(forms.Form):
-    choices = get_choices(ProcessedTeamStatsDf)
+    choices = get_choices_for_predictors(ProcessedTeamStatsDf)
     blue_team = NameModelChoiceField(label="", empty_label="Select Blue Team", queryset=Team.objects.all(),
                                      to_field_name='name')
     red_team = NameModelChoiceField(label="", empty_label="Select Red Team", queryset=Team.objects.all(),
@@ -59,8 +71,8 @@ class DashboardTeamForm(forms.Form):
 
 
 class DashboardPlayerForm(forms.Form):
-    predictor_choices = get_choices(ProcessedPlayerStatsDf)
-    player_stats_choices_list = PlayerStats._meta.get_all_field_names()
+    predictor_choices = get_choices_for_predictors(ProcessedPlayerStatsDf)
+    player_stats_choices_list = ('kills', 'deaths', 'assists', 'minions_killed', 'gold')
     player_choices = [(choice, choice) for choice in player_stats_choices_list]
     player_name = NameModelChoiceField(label="", empty_label="Select Player", queryset=Player.objects.all())
     player_stats_to_predict = forms.MultipleChoiceField(label="Select stats to predict", choices=player_choices)

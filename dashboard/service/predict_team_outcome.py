@@ -44,7 +44,7 @@ class PredictTeamWin:
         return game_ids
 
     def _get_game_by_ids(self, game_ids):
-        return Game.objects.get(pk=game_ids)
+        return Game.objects.filter(id__in=game_ids)
 
     def _get_team_id_by_team_name(self, team_name):
         team = Team.objects.filter(name=team_name)
@@ -109,33 +109,45 @@ class PredictTeamWin:
     # {'color': 'blue', 'won': True, 'assists': 37, 'game_number': 1, 'team_name': 'H2K', 'total_gold': 51230,
     # 'team_id': 1273, 'game_id': 6092, 'deaths': 5, 'game_length_minutes': 27.816666666666666, 'kills': 16,
     # 'minions_killed': 783}
-    @staticmethod
-    def _convert_game_to_team_stats_df(game):
-        if game.team_stats[0].color == 'blue':
-            blue_team_stats = dict(game.team_stats[0].__dict__)
-            blue_team_stats['team_name'] = game.team_stats[0].team.name
-            red_team_stats = dict(game.team_stats[1].__dict__)
-            red_team_stats['team_name'] = game.team_stats[1].team.name
+    def _convert_game_to_team_stats_df(self, game):
+        key_stats = list(self.key_stats)
+        key_stats.remove('k_a')
+        key_stats.remove('a_over_k')
+        team_stats = game.teamstats_set.all()
+        if team_stats[0].color == 'blue':
+            blue_team_stats = team_stats.values()[0]
+            blue_team_stats['team_name'] = team_stats[0].team.name
+            red_team_stats = team_stats.values()[1]
+            red_team_stats['team_name'] = team_stats[1].team.name
         else:
-            blue_team_stats = dict(game.team_stats[1].__dict__)
-            blue_team_stats['team_name'] = game.team_stats[1].team.name
-            red_team_stats = dict(game.team_stats[0].__dict__)
-            red_team_stats['team_name'] = game.team_stats[0].team.name
-        del blue_team_stats['_sa_instance_state']
-        del red_team_stats['_sa_instance_state']
+            blue_team_stats = team_stats.values()[1]
+            blue_team_stats['team_name'] = team_stats[1].team.name
+            red_team_stats = team_stats.values()[0]
+            red_team_stats['team_name'] = team_stats[0].team.name
         blue_team_stats['game_length_minutes'] = float(game.game_length_minutes)
         red_team_stats['game_length_minutes'] = float(game.game_length_minutes)
         blue_team_stats['total_gold'] = float(blue_team_stats['total_gold'])
         red_team_stats['total_gold'] = float(red_team_stats['total_gold'])
+        for key_stat in key_stats:
+            blue_team_stats['allowed_{}'.format(key_stat)] = red_team_stats[key_stat]
+            red_team_stats['allowed_{}'.format(key_stat)] = blue_team_stats[key_stat]
         return blue_team_stats, red_team_stats
 
     def _process_team_stats_df(self, team_stats_df):
         team_stats_df = team_stats_df.sort(['game_id', 'team_id'])
-        key_stats = ['game_number', 'game_length_minutes'] + (list(self.key_stats))
+        key_stats_list = (list(self.key_stats))
+        key_stats_allowed = ['allowed_' + key_stat for key_stat in key_stats_list]
+        key_stats = ['game_number', 'game_length_minutes'] + key_stats_list + key_stats_allowed
+        team_stats_df['clean_kills'] = team_stats_df['kills']
+        team_stats_df['allowed_clean_kills'] = team_stats_df['allowed_kills']
+        team_stats_df.ix[team_stats_df.clean_kills==0, 'clean_kills'] = 1
         team_stats_df['k_a'] = \
             team_stats_df['kills'] + team_stats_df['assists']
         team_stats_df['a_over_k'] = \
-            team_stats_df['assists'] / team_stats_df['kills']
+            team_stats_df['assists'] / team_stats_df['clean_kills']
+        team_stats_df['allowed_k_a'] = team_stats_df['allowed_kills'] + team_stats_df['allowed_assists']
+        team_stats_df['allowed_a_over_k'] = \
+            team_stats_df['allowed_assists'] / team_stats_df['allowed_clean_kills']
         team_grouped_by_game_id_df = team_stats_df.groupby(['game_id'], as_index=False).sum()
         team_grouped_by_game_id_df.rename(columns=lambda column_name: column_name if column_name == 'game_id' else
         '{}_for_game'.format(column_name), inplace=True)
