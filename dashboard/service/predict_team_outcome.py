@@ -16,7 +16,7 @@ __author__ = 'Greg'
 class PredictTeamWin:
 
     def __init__(self, engine, blue_team_name, red_team_name,
-                 predictor_stats=('csum_prev_min_k_a', 'csum_prev_min_minions_killed', 'csum_prev_min_total_gold')):
+                 predictor_stats=('csum_min_k_a', 'csum_min_minions_killed', 'csum_min_gold')):
         self.team_stats_df = None
         self.logreg = linear_model.LogisticRegression()
         self.red_team_name = red_team_name
@@ -27,8 +27,8 @@ class PredictTeamWin:
         if predictor_stats:
             self.predictor_stats = predictor_stats
         else:
-            self.predictor_stats=('csum_prev_min_k_a', 'csum_prev_min_minions_killed', 'csum_prev_min_total_gold')
-        self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'total_gold',
+            self.predictor_stats=('csum_prev_min_k_a', 'csum_prev_min_minions_killed', 'csum_prev_min_gold')
+        self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold',
                          'k_a', 'a_over_k')
         self._process_team_stats_and_train()
 
@@ -126,8 +126,8 @@ class PredictTeamWin:
             red_team_stats['team_name'] = team_stats[0].team.name
         blue_team_stats['game_length_minutes'] = float(game.game_length_minutes)
         red_team_stats['game_length_minutes'] = float(game.game_length_minutes)
-        blue_team_stats['total_gold'] = float(blue_team_stats['total_gold'])
-        red_team_stats['total_gold'] = float(red_team_stats['total_gold'])
+        blue_team_stats['gold'] = blue_team_stats['gold']
+        red_team_stats['gold'] = red_team_stats['gold']
         for key_stat in key_stats:
             blue_team_stats['allowed_{}'.format(key_stat)] = red_team_stats[key_stat]
             red_team_stats['allowed_{}'.format(key_stat)] = blue_team_stats[key_stat]
@@ -140,7 +140,7 @@ class PredictTeamWin:
         key_stats = ['game_number', 'game_length_minutes'] + key_stats_list + key_stats_allowed
         team_stats_df['clean_kills'] = team_stats_df['kills']
         team_stats_df['allowed_clean_kills'] = team_stats_df['allowed_kills']
-        team_stats_df.ix[team_stats_df.clean_kills==0, 'clean_kills'] = 1
+        team_stats_df.ix[team_stats_df.clean_kills == 0, 'clean_kills'] = 1
         team_stats_df['k_a'] = \
             team_stats_df['kills'] + team_stats_df['assists']
         team_stats_df['a_over_k'] = \
@@ -190,7 +190,7 @@ class PredictTeamWin:
         y_array_list = []
         for game in games:
             game_predictor_stats = []
-            if not (numpy.isnan(game['csum_prev_min_minions_killed']) and numpy.isnan(game['csum_prev_min_total_gold'])):
+            if not (numpy.isnan(game['csum_prev_min_minions_killed']) and numpy.isnan(game['csum_prev_min_gold'])):
                 for predictor_stat in self.predictor_stats:
                     game_predictor_stats.append(game[predictor_stat])
                 game_list.append(game_predictor_stats)

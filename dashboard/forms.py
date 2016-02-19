@@ -35,10 +35,10 @@ def get_choices_for_predictors(ModelDF):
     choices_list = ModelDF._meta.get_all_field_names()
     choices = []
     for choice in choices_list:
-        if ('csum_prev_min' in choice or 'eff' in choice) \
-                and 'game_number' not in choice and 'game_length' not in choice \
-                and 'csum_prev_minions_killed' != choice:
-            choices.append((choice, choice))
+        if ('csum_min_' in choice or 'eff' in choice) and 'allowed' not in choice \
+                and 'game_number' not in choice and 'game_length' not in choice:
+            cleaned_choice = choice.replace('csum_min_', 'per minute ').replace('eff', 'efficiency').replace('_', ' ').upper()
+            choices.append((choice, cleaned_choice))
     return choices
 
 
@@ -78,6 +78,8 @@ class DashboardPlayerForm(forms.Form):
     player_stats_to_predict = forms.MultipleChoiceField(label="Select stats to predict", choices=player_choices)
     player_predictor_values = forms.MultipleChoiceField(label="Select Predictors(Advance Option)",
                                                         choices=predictor_choices, required=False)
+    opposing_team = NameModelChoiceField(label="", empty_label="Select Opposing Team", queryset=Team.objects.all(),
+                                     to_field_name='name')
 
     def __init__(self, *args, **kwargs):
         super(DashboardPlayerForm, self).__init__(*args, **kwargs)

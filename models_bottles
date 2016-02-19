@@ -12,15 +12,379 @@ from __future__ import unicode_literals
 from django.db import models
 
 
+class AuthGroup(models.Model):
+    name = models.CharField(unique=True, max_length=80)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_group'
+
+
+class AuthGroupPermissions(models.Model):
+    group = models.ForeignKey(AuthGroup)
+    permission = models.ForeignKey('AuthPermission')
+
+    class Meta:
+        managed = False
+        db_table = 'auth_group_permissions'
+        unique_together = (('group_id', 'permission_id'),)
+
+
+class AuthPermission(models.Model):
+    name = models.CharField(max_length=255)
+    content_type = models.ForeignKey('DjangoContentType')
+    codename = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_permission'
+        unique_together = (('content_type_id', 'codename'),)
+
+
+class AuthUser(models.Model):
+    password = models.CharField(max_length=128)
+    last_login = models.DateTimeField(blank=True, null=True)
+    is_superuser = models.BooleanField()
+    username = models.CharField(unique=True, max_length=30)
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    email = models.CharField(max_length=254)
+    is_staff = models.BooleanField()
+    is_active = models.BooleanField()
+    date_joined = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user'
+
+
+class AuthUserGroups(models.Model):
+    user = models.ForeignKey(AuthUser)
+    group = models.ForeignKey(AuthGroup)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_groups'
+        unique_together = (('user_id', 'group_id'),)
+
+
+class AuthUserUserPermissions(models.Model):
+    user = models.ForeignKey(AuthUser)
+    permission = models.ForeignKey(AuthPermission)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_user_permissions'
+        unique_together = (('user_id', 'permission_id'),)
+
+
+class BlogBlogcategory(models.Model):
+    title = models.CharField(max_length=500)
+    slug = models.CharField(max_length=2000, blank=True, null=True)
+    site = models.ForeignKey('DjangoSite')
+
+    class Meta:
+        managed = False
+        db_table = 'blog_blogcategory'
+
+
+class BlogBlogpost(models.Model):
+    comments_count = models.IntegerField()
+    keywords_string = models.CharField(max_length=500)
+    rating_count = models.IntegerField()
+    rating_sum = models.IntegerField()
+    rating_average = models.FloatField()
+    title = models.CharField(max_length=500)
+    slug = models.CharField(max_length=2000, blank=True, null=True)
+    field_meta_title = models.CharField(db_column='_meta_title', max_length=500, blank=True, null=True)  # Field renamed because it started with '_'.
+    description = models.TextField()
+    gen_description = models.BooleanField()
+    created = models.DateTimeField(blank=True, null=True)
+    updated = models.DateTimeField(blank=True, null=True)
+    status = models.IntegerField()
+    publish_date = models.DateTimeField(blank=True, null=True)
+    expiry_date = models.DateTimeField(blank=True, null=True)
+    short_url = models.CharField(max_length=200, blank=True, null=True)
+    in_sitemap = models.BooleanField()
+    content = models.TextField()
+    allow_comments = models.BooleanField()
+    featured_image = models.CharField(max_length=255, blank=True, null=True)
+    site = models.ForeignKey('DjangoSite')
+    user = models.ForeignKey(AuthUser)
+
+    class Meta:
+        managed = False
+        db_table = 'blog_blogpost'
+
+
+class BlogBlogpostCategories(models.Model):
+    blogpost = models.ForeignKey(BlogBlogpost)
+    blogcategory = models.ForeignKey(BlogBlogcategory)
+
+    class Meta:
+        managed = False
+        db_table = 'blog_blogpost_categories'
+        unique_together = (('blogpost_id', 'blogcategory_id'),)
+
+
+class BlogBlogpostRelatedPosts(models.Model):
+    from_blogpost = models.ForeignKey(BlogBlogpost)
+    to_blogpost = models.ForeignKey(BlogBlogpost)
+
+    class Meta:
+        managed = False
+        db_table = 'blog_blogpost_related_posts'
+        unique_together = (('from_blogpost_id', 'to_blogpost_id'),)
+
+
+class CalcTeamStats(models.Model):
+    index = models.BigIntegerField(blank=True, null=True)
+    assists_x = models.BigIntegerField(blank=True, null=True)
+    barons_x = models.BigIntegerField(blank=True, null=True)
+    color = models.TextField(blank=True, null=True)
+    created_date = models.DateTimeField(blank=True, null=True)
+    deaths_x = models.BigIntegerField(blank=True, null=True)
+    dragons_x = models.BigIntegerField(blank=True, null=True)
+    game_id = models.BigIntegerField(blank=True, null=True)
+    game_length_minutes_x = models.FloatField(blank=True, null=True)
+    game_number_x = models.BigIntegerField(blank=True, null=True)
+    gold = models.TextField(blank=True, null=True)
+    id_x = models.BigIntegerField(blank=True, null=True)
+    kills_x = models.BigIntegerField(blank=True, null=True)
+    minions_killed_x = models.BigIntegerField(blank=True, null=True)
+    team_id_x = models.BigIntegerField(blank=True, null=True)
+    team_name = models.TextField(blank=True, null=True)
+    total_gold_x = models.FloatField(blank=True, null=True)
+    turrets_x = models.BigIntegerField(blank=True, null=True)
+    won_x = models.NullBooleanField()
+    k_a_x = models.BigIntegerField(db_column='K_A_x', blank=True, null=True)  # Field name made lowercase.
+    a_over_k_x = models.FloatField(db_column='A_over_K_x', blank=True, null=True)  # Field name made lowercase.
+    assists_y = models.BigIntegerField(blank=True, null=True)
+    barons_y = models.BigIntegerField(blank=True, null=True)
+    deaths_y = models.BigIntegerField(blank=True, null=True)
+    dragons_y = models.BigIntegerField(blank=True, null=True)
+    game_length_minutes_y = models.FloatField(blank=True, null=True)
+    game_number_y = models.BigIntegerField(blank=True, null=True)
+    id_y = models.BigIntegerField(blank=True, null=True)
+    kills_y = models.BigIntegerField(blank=True, null=True)
+    minions_killed_y = models.BigIntegerField(blank=True, null=True)
+    team_id_y = models.BigIntegerField(blank=True, null=True)
+    total_gold_y = models.FloatField(blank=True, null=True)
+    turrets_y = models.BigIntegerField(blank=True, null=True)
+    won_y = models.NullBooleanField()
+    k_a_y = models.BigIntegerField(db_column='K_A_y', blank=True, null=True)  # Field name made lowercase.
+    a_over_k_y = models.FloatField(db_column='A_over_K_y', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'calc_team_stats'
+
+
+class ConfSetting(models.Model):
+    name = models.CharField(max_length=50)
+    value = models.CharField(max_length=2000)
+    site = models.ForeignKey('DjangoSite')
+
+    class Meta:
+        managed = False
+        db_table = 'conf_setting'
+
+
+class CoreSitepermission(models.Model):
+    user = models.ForeignKey(AuthUser, unique=True)
+
+    class Meta:
+        managed = False
+        db_table = 'core_sitepermission'
+
+
+class CoreSitepermissionSites(models.Model):
+    sitepermission = models.ForeignKey(CoreSitepermission)
+    site = models.ForeignKey('DjangoSite')
+
+    class Meta:
+        managed = False
+        db_table = 'core_sitepermission_sites'
+        unique_together = (('sitepermission_id', 'site_id'),)
+
+
 class DataSource(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    external_location = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=-1, blank=True, null=True)
+    external_location = models.CharField(max_length=-1, blank=True, null=True)
     tournament = models.ForeignKey('Tournament', blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'data_source'
+
+
+class DjangoAdminLog(models.Model):
+    action_time = models.DateTimeField()
+    object_id = models.TextField(blank=True, null=True)
+    object_repr = models.CharField(max_length=200)
+    action_flag = models.SmallIntegerField()
+    change_message = models.TextField()
+    content_type = models.ForeignKey('DjangoContentType', blank=True, null=True)
+    user = models.ForeignKey(AuthUser)
+
+    class Meta:
+        managed = False
+        db_table = 'django_admin_log'
+
+
+class DjangoCommentFlags(models.Model):
+    flag = models.CharField(max_length=30)
+    flag_date = models.DateTimeField()
+    comment = models.ForeignKey('DjangoComments')
+    user = models.ForeignKey(AuthUser)
+
+    class Meta:
+        managed = False
+        db_table = 'django_comment_flags'
+        unique_together = (('user_id', 'comment_id', 'flag'),)
+
+
+class DjangoComments(models.Model):
+    object_pk = models.TextField()
+    user_name = models.CharField(max_length=50)
+    user_email = models.CharField(max_length=254)
+    user_url = models.CharField(max_length=200)
+    comment = models.TextField()
+    submit_date = models.DateTimeField()
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    is_public = models.BooleanField()
+    is_removed = models.BooleanField()
+    content_type = models.ForeignKey('DjangoContentType')
+    site = models.ForeignKey('DjangoSite')
+    user = models.ForeignKey(AuthUser, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'django_comments'
+
+
+class DjangoContentType(models.Model):
+    app_label = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'django_content_type'
+        unique_together = (('app_label', 'model'),)
+
+
+class DjangoMigrations(models.Model):
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
+class DjangoRedirect(models.Model):
+    site = models.ForeignKey('DjangoSite')
+    old_path = models.CharField(max_length=200)
+    new_path = models.CharField(max_length=200)
+
+    class Meta:
+        managed = False
+        db_table = 'django_redirect'
+        unique_together = (('site_id', 'old_path'),)
+
+
+class DjangoSession(models.Model):
+    session_key = models.CharField(primary_key=True, max_length=40)
+    session_data = models.TextField()
+    expire_date = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_session'
+
+
+class DjangoSite(models.Model):
+    domain = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        managed = False
+        db_table = 'django_site'
+
+
+class FormsField(models.Model):
+    field_order = models.IntegerField(db_column='_order', blank=True, null=True)  # Field renamed because it started with '_'.
+    label = models.CharField(max_length=200)
+    field_type = models.IntegerField()
+    required = models.BooleanField()
+    visible = models.BooleanField()
+    choices = models.CharField(max_length=1000)
+    default = models.CharField(max_length=2000)
+    placeholder_text = models.CharField(max_length=100)
+    help_text = models.CharField(max_length=100)
+    form = models.ForeignKey('FormsForm')
+
+    class Meta:
+        managed = False
+        db_table = 'forms_field'
+
+
+class FormsFieldentry(models.Model):
+    field_id = models.IntegerField()
+    value = models.CharField(max_length=2000, blank=True, null=True)
+    entry = models.ForeignKey('FormsFormentry')
+
+    class Meta:
+        managed = False
+        db_table = 'forms_fieldentry'
+
+
+class FormsForm(models.Model):
+    page_ptr = models.ForeignKey('PagesPage', primary_key=True)
+    content = models.TextField()
+    button_text = models.CharField(max_length=50)
+    response = models.TextField()
+    send_email = models.BooleanField()
+    email_from = models.CharField(max_length=254)
+    email_copies = models.CharField(max_length=200)
+    email_subject = models.CharField(max_length=200)
+    email_message = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'forms_form'
+
+
+class FormsFormentry(models.Model):
+    entry_time = models.DateTimeField()
+    form = models.ForeignKey(FormsForm)
+
+    class Meta:
+        managed = False
+        db_table = 'forms_formentry'
+
+
+class GalleriesGallery(models.Model):
+    page_ptr = models.ForeignKey('PagesPage', primary_key=True)
+    content = models.TextField()
+    zip_import = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'galleries_gallery'
+
+
+class GalleriesGalleryimage(models.Model):
+    field_order = models.IntegerField(db_column='_order', blank=True, null=True)  # Field renamed because it started with '_'.
+    file = models.CharField(max_length=200)
+    description = models.CharField(max_length=1000)
+    gallery = models.ForeignKey(GalleriesGallery)
+
+    class Meta:
+        managed = False
+        db_table = 'galleries_galleryimage'
 
 
 class Game(models.Model):
@@ -35,10 +399,100 @@ class Game(models.Model):
         db_table = 'game'
 
 
+class GenericAssignedkeyword(models.Model):
+    field_order = models.IntegerField(db_column='_order', blank=True, null=True)  # Field renamed because it started with '_'.
+    object_pk = models.IntegerField()
+    content_type = models.ForeignKey(DjangoContentType)
+    keyword = models.ForeignKey('GenericKeyword')
+
+    class Meta:
+        managed = False
+        db_table = 'generic_assignedkeyword'
+
+
+class GenericKeyword(models.Model):
+    title = models.CharField(max_length=500)
+    slug = models.CharField(max_length=2000, blank=True, null=True)
+    site = models.ForeignKey(DjangoSite)
+
+    class Meta:
+        managed = False
+        db_table = 'generic_keyword'
+
+
+class GenericRating(models.Model):
+    value = models.IntegerField()
+    rating_date = models.DateTimeField(blank=True, null=True)
+    object_pk = models.IntegerField()
+    content_type = models.ForeignKey(DjangoContentType)
+    user = models.ForeignKey(AuthUser, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'generic_rating'
+
+
+class GenericThreadedcomment(models.Model):
+    comment_ptr = models.ForeignKey(DjangoComments, primary_key=True)
+    rating_count = models.IntegerField()
+    rating_sum = models.IntegerField()
+    rating_average = models.FloatField()
+    by_author = models.BooleanField()
+    replied_to = models.ForeignKey('self', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'generic_threadedcomment'
+
+
+class PagesLink(models.Model):
+    page_ptr = models.ForeignKey('PagesPage', primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = 'pages_link'
+
+
+class PagesPage(models.Model):
+    keywords_string = models.CharField(max_length=500)
+    title = models.CharField(max_length=500)
+    slug = models.CharField(max_length=2000, blank=True, null=True)
+    field_meta_title = models.CharField(db_column='_meta_title', max_length=500, blank=True, null=True)  # Field renamed because it started with '_'.
+    description = models.TextField()
+    gen_description = models.BooleanField()
+    created = models.DateTimeField(blank=True, null=True)
+    updated = models.DateTimeField(blank=True, null=True)
+    status = models.IntegerField()
+    publish_date = models.DateTimeField(blank=True, null=True)
+    expiry_date = models.DateTimeField(blank=True, null=True)
+    short_url = models.CharField(max_length=200, blank=True, null=True)
+    in_sitemap = models.BooleanField()
+    field_order = models.IntegerField(db_column='_order', blank=True, null=True)  # Field renamed because it started with '_'.
+    in_menus = models.CharField(max_length=100, blank=True, null=True)
+    titles = models.CharField(max_length=1000, blank=True, null=True)
+    content_model = models.CharField(max_length=50, blank=True, null=True)
+    login_required = models.BooleanField()
+    parent = models.ForeignKey('self', blank=True, null=True)
+    site = models.ForeignKey(DjangoSite)
+
+    class Meta:
+        managed = False
+        db_table = 'pages_page'
+
+
+class PagesRichtextpage(models.Model):
+    page_ptr = models.ForeignKey(PagesPage, primary_key=True)
+    content = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'pages_richtextpage'
+
+
 class Player(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    external_id = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=-1, blank=True, null=True)
+    external_id = models.CharField(max_length=-1, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -47,11 +501,11 @@ class Player(models.Model):
 
 class PlayerStats(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    champion_played = models.CharField(max_length=255, blank=True, null=True)
+    champion_played = models.CharField(max_length=-1, blank=True, null=True)
     kills = models.IntegerField(blank=True, null=True)
     deaths = models.IntegerField(blank=True, null=True)
     assists = models.IntegerField(blank=True, null=True)
-    gold = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    gold = models.IntegerField(blank=True, null=True)
     minions_killed = models.IntegerField(blank=True, null=True)
     game = models.ForeignKey(Game, blank=True, null=True)
     team = models.ForeignKey('Team', blank=True, null=True)
@@ -60,76 +514,6 @@ class PlayerStats(models.Model):
     class Meta:
         managed = False
         db_table = 'player_stats'
-
-
-class PlayerStatsDf(models.Model):
-    index = models.BigIntegerField(blank=True, null=True)
-    assists = models.BigIntegerField(blank=True, null=True)
-    champion_played = models.TextField(blank=True, null=True)
-    created_date = models.DateTimeField(blank=True, null=True)
-    deaths = models.BigIntegerField(blank=True, null=True)
-    game_id = models.BigIntegerField(blank=True, null=True)
-    game_length_minutes = models.FloatField(blank=True, null=True)
-    gold = models.FloatField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, primary_key=True)
-    kills = models.BigIntegerField(blank=True, null=True)
-    minions_killed = models.BigIntegerField(blank=True, null=True)
-    player_id = models.BigIntegerField(blank=True, null=True)
-    player_name = models.TextField(blank=True, null=True)
-    team_id = models.BigIntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'player_stats_df'
-
-
-class ProcessedPlayerStatsDf(models.Model):
-    index = models.BigIntegerField(blank=True, null=True)
-    assists = models.BigIntegerField(blank=True, null=True)
-    champion_played = models.TextField(blank=True, null=True)
-    created_date = models.DateTimeField(blank=True, null=True)
-    deaths = models.BigIntegerField(blank=True, null=True)
-    game = models.ForeignKey(Game, blank=True, null=True)
-    game_length_minutes = models.FloatField(blank=True, null=True)
-    gold = models.FloatField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, primary_key=True)
-    kills = models.BigIntegerField(blank=True, null=True)
-    minions_killed = models.BigIntegerField(blank=True, null=True)
-    player_id = models.BigIntegerField(blank=True, null=True)
-    player_name = models.TextField(blank=True, null=True)
-    # team = models.ForeignKey('Team', blank=True, null=True)
-    csum_game_length_minutes = models.FloatField(blank=True, null=True)
-    csum_prev_game_length_minutes = models.FloatField(blank=True, null=True)
-    per_min_game_length_minutes = models.FloatField(blank=True, null=True)
-    csum_kills = models.BigIntegerField(blank=True, null=True)
-    csum_prev_kills = models.BigIntegerField(blank=True, null=True)
-    per_min_kills = models.FloatField(blank=True, null=True)
-    csum_min_kills = models.FloatField(blank=True, null=True)
-    csum_prev_min_kills = models.FloatField(blank=True, null=True)
-    csum_deaths = models.BigIntegerField(blank=True, null=True)
-    csum_prev_deaths = models.BigIntegerField(blank=True, null=True)
-    per_min_deaths = models.FloatField(blank=True, null=True)
-    csum_min_deaths = models.FloatField(blank=True, null=True)
-    csum_prev_min_deaths = models.FloatField(blank=True, null=True)
-    csum_assists = models.BigIntegerField(blank=True, null=True)
-    csum_prev_assists = models.BigIntegerField(blank=True, null=True)
-    per_min_assists = models.FloatField(blank=True, null=True)
-    csum_min_assists = models.FloatField(blank=True, null=True)
-    csum_prev_min_assists = models.FloatField(blank=True, null=True)
-    csum_minions_killed = models.BigIntegerField(blank=True, null=True)
-    csum_prev_minions_killed = models.BigIntegerField(blank=True, null=True)
-    per_min_minions_killed = models.FloatField(blank=True, null=True)
-    csum_min_minions_killed = models.FloatField(blank=True, null=True)
-    csum_prev_min_minions_killed = models.FloatField(blank=True, null=True)
-    csum_gold = models.FloatField(blank=True, null=True)
-    csum_prev_gold = models.FloatField(blank=True, null=True)
-    per_min_gold = models.FloatField(blank=True, null=True)
-    csum_min_gold = models.FloatField(blank=True, null=True)
-    csum_prev_min_gold = models.FloatField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'processed_player_stats_df'
 
 
 class ProcessedTeamStatsDf(models.Model):
@@ -145,14 +529,14 @@ class ProcessedTeamStatsDf(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
     deaths = models.BigIntegerField(blank=True, null=True)
     dragons = models.BigIntegerField(blank=True, null=True)
-    game = models.ForeignKey(Game, blank=True, null=True)
+    game_id = models.BigIntegerField(blank=True, null=True)
     game_length_minutes = models.FloatField(blank=True, null=True)
     game_number = models.BigIntegerField(blank=True, null=True)
     gold = models.BigIntegerField(blank=True, null=True)
-    id = models.BigIntegerField(primary_key=True)
+    id = models.BigIntegerField(blank=True, null=True)
     kills = models.BigIntegerField(blank=True, null=True)
     minions_killed = models.BigIntegerField(blank=True, null=True)
-    team = models.ForeignKey('Team', blank=True, null=True)
+    team_id = models.BigIntegerField(blank=True, null=True)
     team_name = models.TextField(blank=True, null=True)
     total_gold = models.TextField(blank=True, null=True)
     turrets = models.BigIntegerField(blank=True, null=True)
@@ -368,8 +752,8 @@ class ProcessedTeamStatsDf(models.Model):
 
 class Team(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    external_name = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=-1, blank=True, null=True)
+    external_name = models.CharField(max_length=-1, blank=True, null=True)
     external_id = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -388,14 +772,14 @@ class TeamPlayer(models.Model):
 
 class TeamStats(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    total_gold = models.CharField(max_length=255, blank=True, null=True)
+    total_gold = models.CharField(max_length=-1, blank=True, null=True)
     won = models.NullBooleanField()
-    color = models.CharField(max_length=255, blank=True, null=True)
+    color = models.CharField(max_length=-1, blank=True, null=True)
     deaths = models.IntegerField(blank=True, null=True)
     minions_killed = models.IntegerField(blank=True, null=True)
     assists = models.IntegerField(blank=True, null=True)
     kills = models.IntegerField(blank=True, null=True)
-    gold = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    gold = models.IntegerField(blank=True, null=True)
     barons = models.IntegerField(blank=True, null=True)
     dragons = models.IntegerField(blank=True, null=True)
     turrets = models.IntegerField(blank=True, null=True)
@@ -410,6 +794,11 @@ class TeamStats(models.Model):
 
 class TeamStatsDf(models.Model):
     index = models.BigIntegerField(blank=True, null=True)
+    allowed_assists = models.BigIntegerField(blank=True, null=True)
+    allowed_deaths = models.BigIntegerField(blank=True, null=True)
+    allowed_gold = models.BigIntegerField(blank=True, null=True)
+    allowed_kills = models.BigIntegerField(blank=True, null=True)
+    allowed_minions_killed = models.BigIntegerField(blank=True, null=True)
     assists = models.BigIntegerField(blank=True, null=True)
     barons = models.BigIntegerField(blank=True, null=True)
     color = models.TextField(blank=True, null=True)
@@ -419,13 +808,13 @@ class TeamStatsDf(models.Model):
     game_id = models.BigIntegerField(blank=True, null=True)
     game_length_minutes = models.FloatField(blank=True, null=True)
     game_number = models.BigIntegerField(blank=True, null=True)
-    gold = models.TextField(blank=True, null=True)
-    id = models.BigIntegerField(blank=True, primary_key=True)
+    gold = models.BigIntegerField(blank=True, null=True)
+    id = models.BigIntegerField(blank=True, null=True)
     kills = models.BigIntegerField(blank=True, null=True)
     minions_killed = models.BigIntegerField(blank=True, null=True)
     team_id = models.BigIntegerField(blank=True, null=True)
     team_name = models.TextField(blank=True, null=True)
-    total_gold = models.FloatField(blank=True, null=True)
+    total_gold = models.TextField(blank=True, null=True)
     turrets = models.BigIntegerField(blank=True, null=True)
     won = models.NullBooleanField()
 
@@ -436,11 +825,38 @@ class TeamStatsDf(models.Model):
 
 class Tournament(models.Model):
     created_date = models.DateTimeField(blank=True, null=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    region = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=-1, blank=True, null=True)
+    region = models.CharField(max_length=-1, blank=True, null=True)
     year = models.IntegerField(blank=True, null=True)
-    season = models.CharField(max_length=255, blank=True, null=True)
+    season = models.CharField(max_length=-1, blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'tournament'
+
+
+class TwitterQuery(models.Model):
+    type = models.CharField(max_length=10)
+    value = models.CharField(max_length=140)
+    interested = models.BooleanField()
+
+    class Meta:
+        managed = False
+        db_table = 'twitter_query'
+
+
+class TwitterTweet(models.Model):
+    remote_id = models.CharField(max_length=50)
+    created_at = models.DateTimeField(blank=True, null=True)
+    text = models.TextField(blank=True, null=True)
+    profile_image_url = models.CharField(max_length=200, blank=True, null=True)
+    user_name = models.CharField(max_length=100, blank=True, null=True)
+    full_name = models.CharField(max_length=100, blank=True, null=True)
+    retweeter_profile_image_url = models.CharField(max_length=200, blank=True, null=True)
+    retweeter_user_name = models.CharField(max_length=100, blank=True, null=True)
+    retweeter_full_name = models.CharField(max_length=100, blank=True, null=True)
+    query = models.ForeignKey(TwitterQuery)
+
+    class Meta:
+        managed = False
+        db_table = 'twitter_tweet'

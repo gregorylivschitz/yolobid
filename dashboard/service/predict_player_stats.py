@@ -1,33 +1,40 @@
 from operator import itemgetter
 from decimal import Decimal
+from django.forms import model_to_dict
 import numpy
+numpy.set_printoptions(threshold=numpy.inf)
 import pandas
 # from entities.league_of_legends_entities import Game, Player
 from statsmodels.discrete.discrete_model import Poisson
-from dashboard.models import Game, Player
+from dashboard.models import Game, Player, ProcessedTeamStatsDf
 
 __author__ = 'Greg'
 
 
 class PredictPlayerStats:
 
-    def __init__(self, engine, player_name, stat_to_predict,
-                 predictor_stats=('csum_prev_min_kills', 'csum_prev_min_minions_killed', 'csum_prev_min_gold')):
+    def __init__(self, engine, player_name, stat_to_predict, opposing_team_name,
+                 predictor_stats=('csum_min_kills', 'csum_min_minions_killed'),
+                 defense_predictor_stats=('csum_prev_min_allowed_kills', 'csum_prev_min_allowed_assists')):
         self.engine = engine
         self.player_name = player_name
         self.stat_to_predict = stat_to_predict
         if predictor_stats:
-            self.predictor_stats = predictor_stats
+            self.predictor_stats = ('csum_prev_min_kills', 'csum_prev_min_minions_killed')
         else:
-            self.predictor_stats = ('csum_prev_min_kills', 'csum_prev_min_minions_killed', 'csum_prev_min_gold')
+            self.predictor_stats = ('csum_prev_min_kills', 'csum_prev_min_minions_killed')
+        self.predictor_stats = self.predictor_stats + defense_predictor_stats
+        self.opposing_team_name = opposing_team_name
         self.player_stats_table_name = 'player_stats_df'
         self.processed_player_stars_table_name = 'processed_player_stats_df'
-        self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold')
+        self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold',
+                          'k_a', 'a_over_k')
         self._process_player_stats_and_train()
 
     def _process_player_stats_and_train(self):
         processed_player_stats_df = self._get_processed_player_stats_in_df()
         self.latest_predictor_numpy_array = self._get_latest_player_stats_numpy_array(processed_player_stats_df)
+        print('latest predictors numpy array {}'.format(self.latest_predictor_numpy_array))
         predictors, y_array = self._get_predictors_in_numpy_arrays(processed_player_stats_df)
         self._train_model(predictors, y_array)
 
@@ -38,6 +45,7 @@ class PredictPlayerStats:
         dict_player = latest_player_stats_df.to_dict('records')[0]
         player_predictor_stats = []
         for predictor_stat in self.predictor_stats:
+            # print('processing predictor stat {}'.format(predictor_stat))
             player_predictor_stats.append(dict_player[predictor_stat])
         latest_predictor_numpy_array = numpy.array([player_predictor_stats])
         return latest_predictor_numpy_array
@@ -48,15 +56,15 @@ class PredictPlayerStats:
         y_array_list = []
         for player_game_record in player_game_records:
             game_predictor_stats = []
-            if not (numpy.isnan(player_game_record['csum_prev_min_minions_killed']) and numpy.isnan(player_game_record['csum_prev_min_total_gold'])):
-                for predictor_stat in self.predictor_stats:
-                    game_predictor_stats.append(player_game_record[predictor_stat])
-                game_list.append(game_predictor_stats)
-                y_array_list.append(player_game_record['y_element'])
+            if not (numpy.isnan(player_game_record['csum_prev_min_kills'])
+                    or numpy.isnan(player_game_record['csum_prev_min_allowed_kills'])):
+                if player_game_record['csum_prev_min_assists'] != 0:
+                    for predictor_stat in self.predictor_stats:
+                        game_predictor_stats.append(player_game_record[predictor_stat])
+                    game_list.append(game_predictor_stats)
+                    y_array_list.append(player_game_record['y_element'])
         predictors = numpy.array(game_list)
         y_array = numpy.array([y_array_list])
-        # print("predictors are: {}".format(predictors))
-        # print("y array is: {}".format(y_array))
         return predictors, y_array
 
     def _get_predictors(self, processed_player_stats_df):
@@ -68,9 +76,12 @@ class PredictPlayerStats:
 
     def _train_model(self, predictors, y_array):
         y_1darray = numpy.squeeze(y_array)
-        # y_1darray = numpy.reshape(y_1darray, (730, 1))
-        print('predictors {} size {}'.format(predictors, predictors.size))
-        print('y_array {} size {}'.format(y_1darray, y_1darray.size))
+        # print('predictors {} size {}'.format(predictors, predictors.size))
+        # print('y_array {} size {}'.format(y_1darray, y_1darray.size))
+        with open('yolobid_numpy_y.txt', 'w') as numpy_y:
+            numpy_y.write(str(y_1darray))
+        with open('yolobid_numpy_x.txt', 'w') as numpy_x:
+            numpy_x.write(str(predictors))
         self.poisson = Poisson(y_1darray, predictors)
         self.pos_result = self.poisson.fit()
 
@@ -79,8 +90,11 @@ class PredictPlayerStats:
         game_ids = [game for game in game_ids_row]
         return game_ids
 
+    def _get_lastest_processed_team_stats_by_name(self):
+        return ProcessedTeamStatsDf.objects.filter(name=self.opposing_team_name).order_by('-id').first()
+
     def _get_game_by_ids(self, game_ids):
-        return Game.objects.get(pk=game_ids)
+        return Game.objects.filter(id__in=game_ids)
 
     def _get_player_id_by_player_name(self, player_name):
         player = Player.objects.filter(name=player_name)
@@ -108,8 +122,8 @@ class PredictPlayerStats:
                 # want to count max_id we already have it
                 game_ids_to_find = game_ids[max_game_id_index:]
                 games = self._get_game_by_ids(game_ids_to_find)
-                team_stats_df = self._get_player_stats_in_df(games, max_index_cached)
-                self._insert_into_player_stats_df_tables(team_stats_df)
+                player_stats_df = self._get_player_stats_in_df(games, max_index_cached)
+                self._insert_into_player_stats_df_tables(player_stats_df)
             else:
                 # If everything was cached return cached as true and just return the last numbers
                 # I could do this part better.
@@ -128,7 +142,15 @@ class PredictPlayerStats:
     def _process_player_stats_df(self, player_stats_df):
         player_stats_df = player_stats_df.sort(['game_id', 'player_id'])
         key_stats = ['game_length_minutes'] + (list(self.key_stats))
+        player_stats_df['clean_kills'] = player_stats_df['kills']
+        player_stats_df.ix[player_stats_df.clean_kills == 0, 'clean_kills'] = 1
+        player_stats_df['k_a'] = \
+            player_stats_df['kills'] + player_stats_df['assists']
+        player_stats_df['a_over_k'] = \
+            player_stats_df['assists'] / player_stats_df['clean_kills']
+
         for key_stat in key_stats:
+            print('doing key stats {}'.format(key_stat))
             player_stats_df['csum_{}'.format(key_stat)] = player_stats_df.groupby(by='player_id')[key_stat].cumsum()
             player_stats_df['csum_prev_{}'.format(key_stat)] = \
                 player_stats_df['csum_{}'.format(key_stat)] - player_stats_df[key_stat]
@@ -137,14 +159,12 @@ class PredictPlayerStats:
             player_stats_df['per_min_{}'.format(key_stat)] = player_stats_df[key_stat] / \
                                                              player_stats_df['game_length_minutes']
             if key_stat not in ['game_number', 'game_length_minutes']:
+                print('doing stats not game_number {}'.format(key_stat))
                 player_stats_df['csum_min_{}'.format(key_stat)] = \
                     player_stats_df['csum_{}'.format(key_stat)] / player_stats_df['csum_game_length_minutes']
-                print(key_stat)
                 player_stats_df['csum_prev_min_{}'.format(key_stat)] = \
                     player_stats_df['csum_prev_{}'.format(key_stat)] / player_stats_df['csum_prev_game_length_minutes']
                 player_stats_df['csum_prev_min_{}'.format(key_stat)].fillna(0, inplace=True)
-            # player_stats_df['csum_prev_kda'] = player_stats_df['csum_prev_kills'] * player_stats_df['csum_prev_assists']\
-            #                                    / player_stats_df['csum_prev_deaths']
             player_stats_df = player_stats_df.sort(['game_id'])
         return player_stats_df
 
@@ -153,7 +173,6 @@ class PredictPlayerStats:
         for game in games:
             players_stats = self._convert_game_to_player_stats_df(game)
             if player_stats_df is None:
-                print(players_stats)
                 player_stats_df = pandas.DataFrame(players_stats, index=list(range(max_index_cached, (max_index_cached + 10))))
             else:
                 single_game_player_stats_df = pandas.DataFrame(players_stats, index=list(range(max_index_cached, (max_index_cached + 10))))
@@ -161,17 +180,26 @@ class PredictPlayerStats:
             max_index_cached += 10
         return player_stats_df
 
-    @staticmethod
-    def _convert_game_to_player_stats_df(game):
-        players_stats = game.player_stats
+    def _convert_game_to_player_stats_df(self, game):
+        players_stats = game.playerstats_set.all()
+        players_stats_dict = game.playerstats_set.all().values()
         player_stats_list = []
-        for player_stats in players_stats:
-            player_stats_dic = dict(player_stats.values)
-            player_stats_dic['game_length_minutes'] = float(game.game_length_minutes)
-            player_stats_dic['gold'] = float(player_stats_dic['gold'])
-            player_stats_dic['player_name'] = player_stats.player.name
-            player_stats_list.append(player_stats_dic)
+        for player_stats, player_stats_dict in zip(players_stats, players_stats_dict):
+            player_stats_dict['game_length_minutes'] = float(game.game_length_minutes)
+            player_stats_dict['gold'] = float(player_stats_dict['gold'])
+            player_stats_dict['player_name'] = player_stats.player.name
+            self._populate_player_stats_with_defense_stats(player_stats_dict, player_stats, game)
+            player_stats_list.append(player_stats_dict)
         return player_stats_list
+
+    def _populate_player_stats_with_defense_stats(self, player_stats_dict, player_stats, game):
+        current_team = player_stats.team
+        processed_team_stats_dict = game.processedteamstatsdf_set.exclude(team_name=current_team).values()[0]
+        for key_stat in self.key_stats:
+            player_stats_dict['csum_prev_min_allowed_{}'.format(key_stat)] = \
+                processed_team_stats_dict['csum_prev_min_allowed_{}'.format(key_stat)]
+            player_stats_dict['csum_min_allowed_{}'.format(key_stat)] = \
+                processed_team_stats_dict['csum_min_allowed_{}'.format(key_stat)]
 
     def _insert_into_player_stats_df_tables(self, player_stats_df):
         player_stats_df.to_sql(self.player_stats_table_name, self.engine, if_exists='append')
@@ -180,7 +208,5 @@ class PredictPlayerStats:
 
     def predict_player_stat(self):
         #reshaped_numpy_array = numpy.reshape(self.latest_predictor_numpy_array, 3,1)
-        # print(reshaped_numpy_array)
-        # print('poisson outcome for {} is: {}'.format(self.player_name, self.poisson.predict(reshaped_numpy_array)))
         probability_in_numpy_array = self.poisson.predict(self.pos_result.params, self.latest_predictor_numpy_array)
         return {self.player_name: probability_in_numpy_array}
