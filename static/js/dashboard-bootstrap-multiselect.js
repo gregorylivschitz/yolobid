@@ -33,6 +33,10 @@ $(document).ready(function() {
         buttonClass: 'btn btn-theme',
         buttonContainer: '<div class="col-md-4"/>'
     });
+    $('#id_opposing_team').multiselect({
+        buttonClass: 'btn btn-theme',
+        enableCaseInsensitiveFiltering: true,
+    });
     var ajaxCallTeamWithButton = function(form_id, form_button_id, chart_id){
         $(form_id).on('submit', function(e) {
             e.preventDefault();
@@ -83,24 +87,3 @@ $(document).ready(function() {
     ajaxCallTeamWithButton('#predict-team-outcome', '#submit-id-submit_team', '#team-donut-chart')
     ajaxCallPlayerWithButton('#predict-player-outcome', '#submit-id-submit_player', '#player-donut-chart')
 });
-
-
-//$(function () {
-//    Morris.Donut({
-//      element: 'team-donut-chart',
-//      data: [
-//        {label: "CLG", value: 40},
-//        {label: "TSM", value: 60},
-//      ],
-//      formatter: function (y, data) { return y + '%' },
-//      colors: ["#085e86", "#A80818"]
-//    });
-//    Morris.Donut({
-//      element: 'player-donut-chart',
-//      data: [
-//        {label: "Predicted Kills", value: 4.3},
-//        {label: "Predicted Assists", value: 7},
-//        {label: "Predicted Deaths", value: 9},
-//      ],
-//    });
-//});

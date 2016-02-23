@@ -5,6 +5,7 @@ from sklearn import linear_model, cross_validation
 from sqlalchemy.orm import sessionmaker
 # from entities.league_of_legends_entities import Game, Team
 from dashboard.models import Game, Team
+from dashboard.service.mixin_classes import ConvertMixin
 
 __author__ = 'Greg'
 # Need to get it to look like this:
@@ -13,7 +14,7 @@ __author__ = 'Greg'
 # 'minions_killed': 783}
 
 
-class PredictTeamWin:
+class PredictTeamWin(ConvertMixin):
 
     def __init__(self, engine, blue_team_name, red_team_name,
                  predictor_stats=('csum_min_k_a', 'csum_min_minions_killed', 'csum_min_gold')):
@@ -151,6 +152,8 @@ class PredictTeamWin:
         team_grouped_by_game_id_df = team_stats_df.groupby(['game_id'], as_index=False).sum()
         team_grouped_by_game_id_df.rename(columns=lambda column_name: column_name if column_name == 'game_id' else
         '{}_for_game'.format(column_name), inplace=True)
+        with open('yolobid_df.txt', 'w') as yolobid_file_df:
+            yolobid_file_df.write(str(team_grouped_by_game_id_df))
         team_stats_df = pandas.merge(team_stats_df, team_grouped_by_game_id_df, on=['game_id'])
         for key_stat in key_stats:
             # Need to add x/y to the keystat because when I add the groupby and merge the keystats get x and y added
@@ -191,7 +194,8 @@ class PredictTeamWin:
         for game in games:
             game_predictor_stats = []
             if not (numpy.isnan(game['csum_prev_min_minions_killed']) and numpy.isnan(game['csum_prev_min_gold'])):
-                for predictor_stat in self.predictor_stats:
+                prev_predictor_stats = self._convert_predictors_to_prev_csum(self.predictor_stats)
+                for predictor_stat in prev_predictor_stats:
                     game_predictor_stats.append(game[predictor_stat])
                 game_list.append(game_predictor_stats)
                 y_array_list.append(game['y_element'])
