@@ -2,16 +2,18 @@ from operator import itemgetter
 from decimal import Decimal
 from django.forms import model_to_dict
 import numpy
+from dashboard.service.mixin_classes import ConvertMixin
 numpy.set_printoptions(threshold=numpy.inf)
 import pandas
 # from entities.league_of_legends_entities import Game, Player
 from statsmodels.discrete.discrete_model import Poisson
 from dashboard.models import Game, Player, ProcessedTeamStatsDf
+import pickle
 
 __author__ = 'Greg'
 
 
-class PredictPlayerStats:
+class PredictPlayerStats(ConvertMixin):
 
     def __init__(self, engine, player_name, stat_to_predict, opposing_team_name,
                  predictor_stats=('csum_min_kills', 'csum_min_minions_killed'),
@@ -59,8 +61,9 @@ class PredictPlayerStats:
             if not (numpy.isnan(player_game_record['csum_prev_min_kills'])
                     or numpy.isnan(player_game_record['csum_prev_min_allowed_kills'])):
                 if player_game_record['csum_prev_min_assists'] != 0:
-                    for predictor_stat in self.predictor_stats:
-                        game_predictor_stats.append(player_game_record[predictor_stat])
+                    prev_predictor_stats = self._convert_predictors_to_prev_csum(self.predictor_stats)
+                    for prev_predictor_stat in prev_predictor_stats:
+                        game_predictor_stats.append(player_game_record[prev_predictor_stat])
                     game_list.append(game_predictor_stats)
                     y_array_list.append(player_game_record['y_element'])
         predictors = numpy.array(game_list)
@@ -78,12 +81,14 @@ class PredictPlayerStats:
         y_1darray = numpy.squeeze(y_array)
         # print('predictors {} size {}'.format(predictors, predictors.size))
         # print('y_array {} size {}'.format(y_1darray, y_1darray.size))
-        with open('yolobid_numpy_y.txt', 'w') as numpy_y:
-            numpy_y.write(str(y_1darray))
-        with open('yolobid_numpy_x.txt', 'w') as numpy_x:
-            numpy_x.write(str(predictors))
+        pickle.dump( y_1darray, open("yolobid_numpy_y.p", "wb"))
+        # with open('yolobid_numpy_y.txt', 'w') as numpy_y:
+        #     numpy_y.write(y_1darray)
+        # with open('yolobid_numpy_x.txt', 'w') as numpy_x:
+        #     numpy_x.write(predictors)
+        pickle.dump( predictors, open("yolobid_numpy_x.p", "wb"))
         self.poisson = Poisson(y_1darray, predictors)
-        self.pos_result = self.poisson.fit()
+        self.pos_result = self.poisson.fit(method='bfgs')
 
     def _get_game_ids_from_database(self):
         game_ids_row = Game.objects.values_list('id', flat=True)
