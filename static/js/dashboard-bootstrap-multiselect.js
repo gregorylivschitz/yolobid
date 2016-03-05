@@ -37,6 +37,14 @@ $(document).ready(function() {
         buttonClass: 'btn btn-theme',
         enableCaseInsensitiveFiltering: true,
     });
+    $('#id_player_game_range').multiselect({
+        buttonClass: 'btn btn-theme',
+        enableCaseInsensitiveFiltering: true,
+    });
+    $('#id_team_game_range').multiselect({
+        buttonClass: 'btn btn-theme',
+        enableCaseInsensitiveFiltering: true,
+    });
     var ajaxCallTeamWithButton = function(form_id, form_button_id, chart_id){
         $(form_id).on('submit', function(e) {
             e.preventDefault();

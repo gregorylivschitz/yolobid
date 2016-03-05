@@ -104,10 +104,6 @@ class DashBoardTableView(FilterTableView):
         return table
 
 
-class DashBoardView(TemplateView):
-    template_name = "dashboard.html"
-
-
 class TeamPredictions(TemplateView):
     template_name = "team_predictions.html"
 
@@ -126,8 +122,8 @@ class TeamPredictions(TemplateView):
         return context
 
 
-class DashboardViewTest(MultiFormsView):
-    template_name = 'dashboard_test.html'
+class DashBoardView(MultiFormsView):
+    template_name = 'dashboard.html'
     form_classes = {'submit_team': DashboardTeamForm,
                     'submit_player': DashboardPlayerForm}
 
@@ -137,8 +133,10 @@ class DashboardViewTest(MultiFormsView):
             blue_team = form.cleaned_data['blue_team'].name
             red_team = form.cleaned_data['red_team'].name
             team_predictor_values = form.cleaned_data['team_predictor_values']
+            team_game_range = form.cleaned_data['team_game_range']
             print('predictor value {}'.format(team_predictor_values))
-            predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values)
+            predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values,
+                                     game_range=team_game_range)
             predict_single_game = predict.predict_on_single_game()
             morris_chart_data = []
             print('making morris chart')
@@ -155,9 +153,10 @@ class DashboardViewTest(MultiFormsView):
         player_name = form.cleaned_data['player_name'].name
         player_stats_to_predict = form.cleaned_data['player_stats_to_predict']
         player_predictor_values = form.cleaned_data['player_predictor_values']
+        player_game_range = form.cleaned_data['player_game_range']
         opposing_team = form.cleaned_data['opposing_team']
         predicted_stats = self.predict_multiple_stats(engine, player_name, player_stats_to_predict,
-                                                      opposing_team, player_predictor_values)
+                                                      opposing_team, player_predictor_values, player_game_range)
         morris_chart_data = []
         for k, v in predicted_stats.items():
             single_chart_point = {'label': k, 'value': v[player_name][0]}
@@ -165,11 +164,12 @@ class DashboardViewTest(MultiFormsView):
         response_object = {'data': morris_chart_data}
         return JsonResponse(response_object)
 
-    def predict_multiple_stats(self, engine, player, stats, opposing_team, player_predictor_values):
+    def predict_multiple_stats(self, engine, player, stats, opposing_team, player_predictor_values, game_range):
         stats_dict = {}
         stats = tuple(stats)
         for stat in stats:
-            predict_player = PredictPlayerStats(engine, player, stat, opposing_team, player_predictor_values)
+            predict_player = PredictPlayerStats(engine, player, stat, opposing_team,
+                                                predictor_stats=player_predictor_values, game_range=game_range)
             predicted_player = predict_player.predict_player_stat()
             stats_dict[stat] = predicted_player
         return stats_dict

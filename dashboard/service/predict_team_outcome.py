@@ -17,7 +17,8 @@ __author__ = 'Greg'
 class PredictTeamWin(ConvertMixin):
 
     def __init__(self, engine, blue_team_name, red_team_name,
-                 predictor_stats=('csum_min_k_a', 'csum_min_minions_killed', 'csum_min_gold')):
+                 predictor_stats=('csum_min_k_a', 'csum_min_minions_killed', 'csum_min_gold'),
+                 game_range=None):
         self.team_stats_df = None
         self.logreg = linear_model.LogisticRegression()
         self.red_team_name = red_team_name
@@ -31,6 +32,7 @@ class PredictTeamWin(ConvertMixin):
             self.predictor_stats=('csum_prev_min_k_a', 'csum_prev_min_minions_killed', 'csum_prev_min_gold')
         self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold',
                          'k_a', 'a_over_k')
+        self.game_range = game_range
         self._process_team_stats_and_train()
 
     def _process_team_stats_and_train(self):
@@ -85,7 +87,13 @@ class PredictTeamWin(ConvertMixin):
             print('table does not exist inserting full table')
             self._insert_into_team_stats_df_tables(team_stats_df)
             print('table inserted')
-        processed_team_stats_df = pandas.read_sql_table(self.processed_team_stats_table_name, self.engine)
+        if self.game_range == '5':
+            print('Selecting 5 games back')
+            processed_team_stats_df = pandas.read_sql('select * from processed_team_stats_df_limit_5', con=self.engine)
+        elif self.game_range == '10':
+            processed_team_stats_df = pandas.read_sql('select * from processed_team_stats_df_limit_10', con=self.engine)
+        else:
+            processed_team_stats_df = pandas.read_sql_table(self.processed_team_stats_table_name, self.engine)
         return processed_team_stats_df
 
     def _insert_into_team_stats_df_tables(self, team_stats_df):
@@ -152,8 +160,6 @@ class PredictTeamWin(ConvertMixin):
         team_grouped_by_game_id_df = team_stats_df.groupby(['game_id'], as_index=False).sum()
         team_grouped_by_game_id_df.rename(columns=lambda column_name: column_name if column_name == 'game_id' else
         '{}_for_game'.format(column_name), inplace=True)
-        with open('yolobid_df.txt', 'w') as yolobid_file_df:
-            yolobid_file_df.write(str(team_grouped_by_game_id_df))
         team_stats_df = pandas.merge(team_stats_df, team_grouped_by_game_id_df, on=['game_id'])
         for key_stat in key_stats:
             # Need to add x/y to the keystat because when I add the groupby and merge the keystats get x and y added

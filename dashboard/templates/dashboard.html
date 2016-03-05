@@ -16,92 +16,23 @@
                     <h3 class="panel-title">Predict Team Outcome</h3>
                 </div>
                 <div class="panel-body">
-                    <form>
-                        <div class="form-group">
-                            <select id="select-blue-team">
-                                <option value="No Team Select">No Team Select</option>
-                                <option value="CLG">CLG</option>
-                                <option value="TSM">TSM</option>
-                                <option value="IM">IM</option>
-                                <option value="FNC">FNC</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <select id="select-red-team">
-                                <option value="No Team Select">No Team Select</option>
-                                <option value="CLG">CLG</option>
-                                <option value="TSM">TSM</option>
-                                <option value="IM">IM</option>
-                                <option value="FNC">FNC</option>
-                            </select>
-                        </div>
-                        <div class="panel panel-default ">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Advanced Options</h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <select class="form-control" id="select-predictors-team" multiple="multiple">
-                                        <option value="kills">kills</option>
-                                        <option value="assists">assists</option>
-                                        <option value="deaths">deaths</option>
-                                        <option value="Eff Ratings">Eff Ratings</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-theme">Submit</button>
-                    </form>
+                    {% csrf_token %}
+                    {% crispy forms.submit_team %}
                 </div>
             </div>
         </div>
-        <div class="container col-md-4">
+        <div class="container col-md-offset-4 col-md-4">
             <div class="panel panel-default ">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Predict Player Stat</h3>
+                    <h3 class="panel-title">Predict Player Stats</h3>
                 </div>
                 <div class="panel-body">
-                    <form>
-                        <div class="form-group">
-                            <select id="select-player">
-                                <option value="No Player Selected">No Player Selected</option>
-                                <option value="DoubleLift">DoubleLift</option>
-                                <option value="XSpecial">XSpecial</option>
-                                <option value="Rush">Rush</option>
-                                <option value="Sneaky">Sneaky</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <select id="select-stat-to-predict"  multiple="multiple">
-                                <option value="No Statistic Select">No Statistic Select</option>
-                                <option value="Kills">Kills</option>
-                                <option value="Assists">Assists</option>
-                                <option value="Deaths">Deaths</option>
-                                <option value="CS">CS</option>
-                            </select>
-                        </div>
-                        <div class="panel panel-default ">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Advanced Options</h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <select class="form-control" id="select-predictors-player" multiple="multiple">
-                                        <option value="kills">kills</option>
-                                        <option value="assists">assists</option>
-                                        <option value="deaths">deaths</option>
-                                        <option value="Eff Ratings">Eff Ratings</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-theme">Submit</button>
-                    </form>
+                    {% csrf_token %}
+                    {% crispy forms.submit_player %}
                 </div>
             </div>
         </div>
     </div>
-
     <div class="row">
         <div class="container col-md-4">
             <div id="team-donut-chart"></div>
@@ -110,8 +41,13 @@
             <div id="player-donut-chart"></div>
         </div>
     </div>
-</div>
+    <!--<div class="row">-->
+        <!--<div class="container col-md-offset-1 col-md-4">-->
+            <!--<button class="btn btn-theme" value="Get more information">Get Data Used For Calculations</button>-->
+        <!--</div>-->
+    <!--</div>-->
 
+</div>
 
 
 {% endblock main_wrapper %}

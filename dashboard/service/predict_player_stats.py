@@ -17,7 +17,8 @@ class PredictPlayerStats(ConvertMixin):
 
     def __init__(self, engine, player_name, stat_to_predict, opposing_team_name,
                  predictor_stats=('csum_min_kills', 'csum_min_minions_killed'),
-                 defense_predictor_stats=('csum_prev_min_allowed_kills', 'csum_prev_min_allowed_assists')):
+                 defense_predictor_stats=('csum_prev_min_allowed_kills', 'csum_prev_min_allowed_assists'),
+                 game_range=None):
         self.engine = engine
         self.player_name = player_name
         self.stat_to_predict = stat_to_predict
@@ -31,6 +32,7 @@ class PredictPlayerStats(ConvertMixin):
         self.processed_player_stars_table_name = 'processed_player_stats_df'
         self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold',
                           'k_a', 'a_over_k')
+        self.game_range = game_range
         self._process_player_stats_and_train()
 
     def _process_player_stats_and_train(self):
@@ -79,14 +81,6 @@ class PredictPlayerStats(ConvertMixin):
 
     def _train_model(self, predictors, y_array):
         y_1darray = numpy.squeeze(y_array)
-        # print('predictors {} size {}'.format(predictors, predictors.size))
-        # print('y_array {} size {}'.format(y_1darray, y_1darray.size))
-        pickle.dump( y_1darray, open("yolobid_numpy_y.p", "wb"))
-        # with open('yolobid_numpy_y.txt', 'w') as numpy_y:
-        #     numpy_y.write(y_1darray)
-        # with open('yolobid_numpy_x.txt', 'w') as numpy_x:
-        #     numpy_x.write(predictors)
-        pickle.dump( predictors, open("yolobid_numpy_x.p", "wb"))
         self.poisson = Poisson(y_1darray, predictors)
         self.pos_result = self.poisson.fit(method='bfgs')
 
@@ -141,7 +135,14 @@ class PredictPlayerStats(ConvertMixin):
             print('table does not exist inserting full table')
             self._insert_into_player_stats_df_tables(team_stats_df)
             print('table inserted')
-        processed_player_stats_df = pandas.read_sql_table(self.processed_player_stars_table_name, self.engine)
+        if self.game_range == '5':
+            processed_player_stats_df = pandas.read_sql('select * from processed_player_stats_df_limit_5',
+                                                              con=self.engine)
+        elif self.game_range == '10':
+            processed_player_stats_df = pandas.read_sql('select * from processed_player_stats_df_limit_10',
+                                                              con=self.engine)
+        else:
+            processed_player_stats_df = pandas.read_sql_table(self.processed_player_stars_table_name, self.engine)
         return processed_player_stats_df
 
     def _process_player_stats_df(self, player_stats_df):

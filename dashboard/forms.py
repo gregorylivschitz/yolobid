@@ -60,6 +60,9 @@ class DashboardTeamForm(forms.Form):
                                     to_field_name='name')
     team_predictor_values = forms.MultipleChoiceField(label="Select Predictors(Advance Option)", choices=choices,
                                                  required=False)
+    team_game_range = forms.ChoiceField(label="", choices=([('empty_label', 'Select Game Range (Advance Option)'),
+                                                         ('5', '5 game back'),
+                                                         ('10', '10 games back')]), required=False)
 
     def __init__(self, *args, **kwargs):
         super(DashboardTeamForm, self).__init__(*args, **kwargs)
@@ -78,6 +81,9 @@ class DashboardPlayerForm(forms.Form):
     player_stats_to_predict = forms.MultipleChoiceField(label="Select stats to predict", choices=player_choices)
     player_predictor_values = forms.MultipleChoiceField(label="Select Predictors(Advance Option)",
                                                         choices=predictor_choices, required=False)
+    player_game_range = forms.ChoiceField(label="", choices=([('empty_label', 'Select Game Range (Advance Option)'),
+                                                         ('5', '5 game back'),
+                                                         ('10', '10 games back')]), required=False)
     opposing_team = NameModelChoiceField(label="", empty_label="Select Opposing Team", queryset=Team.objects.all(),
                                      to_field_name='name')
 
