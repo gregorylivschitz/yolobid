@@ -52,7 +52,7 @@ $(document).ready(function() {
             var btnVal = $(form_button_id).val();
             var btnData = '&'+btnName+'='+btnVal;
             $.ajax({
-                url : "http://127.0.0.1:8000/dashboard_test/",
+                url : "http://127.0.0.1:8000/dashboard/",
                 type: "POST",
                 data: $(this).serialize() + btnData,
                 success: function (data) {
@@ -76,7 +76,7 @@ $(document).ready(function() {
             var btnVal = $(form_button_id).val();
             var btnData = '&'+btnName+'='+btnVal;
             $.ajax({
-                url : "http://127.0.0.1:8000/dashboard_test/",
+                url : "http://127.0.0.1:8000/dashboard/",
                 type: "POST",
                 data: $(this).serialize() + btnData,
                 success: function (data) {

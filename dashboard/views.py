@@ -135,9 +135,9 @@ class DashBoardView(MultiFormsView):
             team_predictor_values = form.cleaned_data['team_predictor_values']
             team_game_range = form.cleaned_data['team_game_range']
             print('predictor value {}'.format(team_predictor_values))
-            predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values,
+            predict = PredictTeamWin(engine, predictor_stats=team_predictor_values,
                                      game_range=team_game_range)
-            predict_single_game = predict.predict_on_single_game()
+            predict_single_game = predict.predict_on_single_game(blue_team, red_team)
             morris_chart_data = []
             print('making morris chart')
             for k, v in predict_single_game.items():
