@@ -33,6 +33,7 @@ class PredictTeamWin(ConvertMixin):
         self.key_stats = ('kills', 'deaths', 'assists', 'minions_killed', 'gold',
                          'k_a', 'a_over_k')
         self.game_range = game_range
+        self.is_loaded = False
         self._process_team_stats_and_train()
 
     def _process_team_stats_and_train(self):
@@ -76,6 +77,7 @@ class PredictTeamWin(ConvertMixin):
                 games = self._get_game_by_ids(game_ids_to_find)
                 team_stats_df = self._get_team_stats_in_df(games)
                 self._insert_into_team_stats_df_tables(team_stats_df)
+                self.is_loaded = True
             else:
                 # If everything was cached return cached as true and just return the last numbers
                 # I could do this part better.
@@ -87,6 +89,7 @@ class PredictTeamWin(ConvertMixin):
             print('table does not exist inserting full table')
             self._insert_into_team_stats_df_tables(team_stats_df)
             print('table inserted')
+            self.is_loaded = True
         if self.game_range == '5':
             print('Selecting 5 games back')
             processed_team_stats_df = pandas.read_sql('select * from processed_team_stats_df_limit_5', con=self.engine)
