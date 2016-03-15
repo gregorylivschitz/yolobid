@@ -1,4 +1,6 @@
 import logging
+import operator
+
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.generic import TemplateView, FormView, ListView, View
 from django_filters.views import FilterView
@@ -136,16 +138,13 @@ class DashBoardView(MultiFormsView):
             team_predictor_values = form.cleaned_data['team_predictor_values']
             team_game_range = form.cleaned_data['team_game_range']
             print('predictor value {}'.format(team_predictor_values))
-            predict = PredictTeamWin(engine, blue_team, red_team, predictor_stats=team_predictor_values,
+            predict = PredictTeamWin(engine, predictor_stats=team_predictor_values,
                                      game_range=team_game_range)
-            predict_single_game = predict.predict_on_single_game()
-            #----------------------------------------------
-            #Mom this is where the function should be called.
-            #Look up how to select all the teams from the database we have a model team, this is "django orm"
-            #if predict.is_loaded:
-            #   top_ten_teams(teams):
-            top_teams = self.top_ten_teams_v2()
+            predict_single_game = predict.predict_on_single_game(blue_team, red_team)
 
+            if predict.is_loaded:
+                top_teams = self.top_ten_teams()
+                
             morris_chart_data = []
             print('making morris chart')
             for k, v in predict_single_game.items():
@@ -156,7 +155,7 @@ class DashBoardView(MultiFormsView):
         else:
             return HttpResponseRedirect(self.get_success_url())
 
-    def top_ten_teams_v2(self):
+    def top_ten_teams(self):
         all_teams_dict = Team.objects.all().values('name')
         all_teams = [x['name'] for x in all_teams_dict]
         print('this is the team name {}'.format(all_teams))
@@ -166,11 +165,15 @@ class DashBoardView(MultiFormsView):
             top_ten[team] = 0;
 
         engine = self.get_engine()
+        predict = PredictTeamWin(engine)
+
+        k=0
         for blue_team in all_teams[0 : -1]:
+            print('{}. team : {}'.format(k, blue_team))
+            k += 1
             for red_team in all_teams[all_teams.index(blue_team) + 1 : ]:
                 #print( "blue:red:: --- ", blue_team, " : ", red_team )
-                predict = PredictTeamWin(engine, blue_team, red_team)
-                predict_single_game = predict.predict_on_single_game()
+                predict_single_game = predict.predict_on_single_game(blue_team, red_team)
                 blue_prob = predict_single_game.get(blue_team)
                 red_prob = predict_single_game.get(red_team)
                 if blue_prob > red_prob:
@@ -183,8 +186,7 @@ class DashBoardView(MultiFormsView):
                         top_ten[blue_team] += 0.5
                 # 2nd round: change the sides
                 #
-                predict = PredictTeamWin(engine, red_team, blue_team)
-                predict_single_game = predict.predict_on_single_game()
+                predict_single_game = predict.predict_on_single_game(red_team, blue_team)
                 blue_prob = predict_single_game.get(blue_team)
                 red_prob = predict_single_game.get(red_team)
                 if blue_prob > red_prob:
@@ -196,8 +198,10 @@ class DashBoardView(MultiFormsView):
                         top_ten[red_team] += 0.5
                         top_ten[blue_team] += 0.5
 
-        sorted_teams_and_wins = sorted(top_ten.items(), key = top_ten.get, reverse=True) #tuples
+        print("top ten unsorted : --- {}".format(top_ten))
+        sorted_teams_and_wins = sorted(top_ten.items(),  key=operator.itemgetter(1), reverse=True) #tuples
         sorted_teams = [ x[0] for x in sorted_teams_and_wins ]
+        print("sorted list : --- {}".format(sorted_teams))
         return sorted_teams
 
     def submit_player_form_valid(self, form):
