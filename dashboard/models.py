@@ -10,6 +10,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils import timezone
 
 
 class DataSource(models.Model):
@@ -378,6 +379,15 @@ class Team(models.Model):
         managed = False
         db_table = 'team'
 
+
+class TopTenTeam(models.Model):
+    created_date = models.DateTimeField(blank=True, null=True, default=timezone.now())
+    name = models.CharField(max_length=255, blank=True, null=True)
+    score = models.IntegerField(blank=True, null=True)
+    rank = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'top_ten_team'
 
 class TeamPlayer(models.Model):
     team = models.ForeignKey(Team, blank=True, null=True)

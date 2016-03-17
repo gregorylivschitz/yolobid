@@ -17,6 +17,7 @@ from dashboard.service.predict_team_outcome import PredictTeamWin
 from dashboard.tables import TeamStatsTable
 from django.conf import settings
 from dashboard.models import Team
+from dashboard.models import TopTenTeam
 
 class DataSourceViewSet(viewsets.ModelViewSet):
     """
@@ -144,7 +145,7 @@ class DashBoardView(MultiFormsView):
 
             if predict.is_loaded:
                 top_teams = self.top_ten_teams()
-                
+
             morris_chart_data = []
             print('making morris chart')
             for k, v in predict_single_game.items():
@@ -158,6 +159,7 @@ class DashBoardView(MultiFormsView):
     def top_ten_teams(self):
         all_teams_dict = Team.objects.all().values('name')
         all_teams = [x['name'] for x in all_teams_dict]
+        #all_teams = Team.objects.all().values_list('name', flat = True)
         print('this is the team name {}'.format(all_teams))
 
         top_ten = {}
@@ -198,11 +200,23 @@ class DashBoardView(MultiFormsView):
                         top_ten[red_team] += 0.5
                         top_ten[blue_team] += 0.5
 
-        print("top ten unsorted : --- {}".format(top_ten))
+        #print("top ten unsorted : --- {}".format(top_ten))
         sorted_teams_and_wins = sorted(top_ten.items(),  key=operator.itemgetter(1), reverse=True) #tuples
-        sorted_teams = [ x[0] for x in sorted_teams_and_wins ]
-        print("sorted list : --- {}".format(sorted_teams))
-        return sorted_teams
+        #print("top ten sorted : --- {}".format(sorted_teams_and_wins))
+        a = range(1, len(sorted_teams_and_wins) + 1)
+        tt = zip(sorted_teams_and_wins, a)
+
+        #print("top ten sorted + rank: --- {}".format(tt))
+        #delete all records 1st:
+        TopTenTeam.objects.all().delete()
+
+        for item, r in tt:
+            t10 = TopTenTeam.objects.create(name = item[0], score = item[1], rank = r)
+
+        #well, not returning anything
+        #sorted_teams = [ x[0] for x in sorted_teams_and_wins ]
+        #print("sorted list : --- {}".format(sorted_teams))
+        #return sorted_teams
 
     def submit_player_form_valid(self, form):
         engine = self.get_engine()
