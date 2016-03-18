@@ -26,7 +26,8 @@ class PredictPlayerStats(ConvertMixin):
             self.predictor_stats = ('csum_prev_min_kills', 'csum_prev_min_minions_killed')
         else:
             self.predictor_stats = ('csum_prev_min_kills', 'csum_prev_min_minions_killed')
-        self.predictor_stats = self.predictor_stats + defense_predictor_stats
+        role_stats = ('Jungler', 'Mid', 'Coach', 'Support', 'AD', 'Sub', 'Top')
+        self.predictor_stats = self.predictor_stats + defense_predictor_stats + role_stats
         self.opposing_team_name = opposing_team_name
         self.player_stats_table_name = 'player_stats_df'
         self.processed_player_stars_table_name = 'processed_player_stats_df'
@@ -104,7 +105,7 @@ class PredictPlayerStats(ConvertMixin):
         last_game_number = game_ids[-1]
         has_processed_team_stats_table = self.engine.has_table(self.processed_player_stars_table_name)
         if has_processed_team_stats_table:
-            df_game_stats = pandas.read_sql_table(self.player_stats_table_name, self.engine)
+            df_game_stats = pandas.read_sql(self.player_stats_table_name, self.engine)
             df_game_stats_all = df_game_stats[df_game_stats.game_id.isin(game_ids)]
             # Using game_numbers here since we need the last few games to check.
             max_game_id_cached = df_game_stats_all['game_id'].max()
@@ -131,9 +132,9 @@ class PredictPlayerStats(ConvertMixin):
             _get_player_stats_in_df = 0
             # Table did not exist, have to get all
             games = self._get_game_by_ids(game_ids)
-            team_stats_df = self._get_player_stats_in_df(games, _get_player_stats_in_df)
+            player_stats_df = self._get_player_stats_in_df(games, _get_player_stats_in_df)
             print('table does not exist inserting full table')
-            self._insert_into_player_stats_df_tables(team_stats_df)
+            self._insert_into_player_stats_df_tables(player_stats_df)
             print('table inserted')
         if self.game_range == '5':
             processed_player_stats_df = pandas.read_sql('select * from processed_player_stats_df_limit_5',
@@ -154,7 +155,12 @@ class PredictPlayerStats(ConvertMixin):
             player_stats_df['kills'] + player_stats_df['assists']
         player_stats_df['a_over_k'] = \
             player_stats_df['assists'] / player_stats_df['clean_kills']
-
+        player_stats_for_pivot = player_stats_df[['player_name', 'role']]
+        player_stats_for_pivot['value'] = 1
+        player_pivot_df = player_stats_for_pivot.pivot_table(index='player_name', columns='role', values='value')
+        player_pivot_df.fillna(0, inplace=True)
+        player_pivot_df.reset_index(inplace=True)
+        player_stats_df = pandas.merge(player_stats_df, player_pivot_df, on='player_name')
         for key_stat in key_stats:
             print('doing key stats {}'.format(key_stat))
             player_stats_df['csum_{}'.format(key_stat)] = player_stats_df.groupby(by='player_id')[key_stat].cumsum()
@@ -209,6 +215,9 @@ class PredictPlayerStats(ConvertMixin):
 
     def _insert_into_player_stats_df_tables(self, player_stats_df):
         player_stats_df.to_sql(self.player_stats_table_name, self.engine, if_exists='append')
+        # Could be optimized kinda a hack
+        player_stats_df = pandas.read_sql("select ps.*, p.role, p.image from player_stats_df ps, player p "
+                                          "where ps.player_id = p.id", self.engine)
         processed_team_stats_df = self._process_player_stats_df(player_stats_df)
         processed_team_stats_df.to_sql(self.processed_player_stars_table_name, self.engine, if_exists='append')
 
