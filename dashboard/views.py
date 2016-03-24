@@ -18,6 +18,7 @@ from dashboard.tables import TeamStatsTable
 from django.conf import settings
 from dashboard.models import Team
 from dashboard.models import TopTenTeam
+from dashboard.service.top_ten_team import TopTenTeamService
 
 class DataSourceViewSet(viewsets.ModelViewSet):
     """
@@ -125,6 +126,24 @@ class TeamPredictions(TemplateView):
         context['winning_percent'] = winning_percent
         return context
 
+class TopTenTeamsView:
+    def top_ten_view(self):
+        allTeams = []
+        print('start building JSON: {}'.format(allTeams))
+        for team in TopTenTeam.objects.filter(rank__in=range(1, 11)):
+            oneTeam = {}
+            oneTeam['name'] = team.name
+            oneTeam['rank'] = team.rank
+            oneTeam['points'] = team.score
+            allTeams.append(oneTeam)
+
+        print('allTeams={}'.format(allTeams))
+        sortedOnes = {}
+        sortedOnes['sorted_teams'] = allTeams
+        json = {}
+        json['data'] = sortedOnes
+        print('...your JSON={}'.format(json))
+        return json
 
 class DashBoardView(MultiFormsView):
     template_name = 'dashboard.html'
@@ -143,8 +162,13 @@ class DashBoardView(MultiFormsView):
                                      game_range=team_game_range)
             predict_single_game = predict.predict_on_single_game(blue_team, red_team)
 
+            topTen = TopTenTeamService(engine)
+
             if predict.is_loaded:
-                top_teams = self.top_ten_teams()
+                top_teams = topTen.top_ten_teams()
+
+            top_teams = topTen.top_ten_teams()
+            TopTenTeamsView().top_ten_view()
 
             morris_chart_data = []
             print('making morris chart')
@@ -155,68 +179,6 @@ class DashBoardView(MultiFormsView):
             return JsonResponse(response_object)
         else:
             return HttpResponseRedirect(self.get_success_url())
-
-    def top_ten_teams(self):
-        all_teams_dict = Team.objects.all().values('name')
-        all_teams = [x['name'] for x in all_teams_dict]
-        #all_teams = Team.objects.all().values_list('name', flat = True)
-        print('this is the team name {}'.format(all_teams))
-
-        top_ten = {}
-        for team in all_teams:
-            top_ten[team] = 0;
-
-        engine = self.get_engine()
-        predict = PredictTeamWin(engine)
-
-        k=0
-        for blue_team in all_teams[0 : -1]:
-            print('{}. team : {}'.format(k, blue_team))
-            k += 1
-            for red_team in all_teams[all_teams.index(blue_team) + 1 : ]:
-                #print( "blue:red:: --- ", blue_team, " : ", red_team )
-                predict_single_game = predict.predict_on_single_game(blue_team, red_team)
-                blue_prob = predict_single_game.get(blue_team)
-                red_prob = predict_single_game.get(red_team)
-                if blue_prob > red_prob:
-                    top_ten[blue_team] += 1
-                else:
-                    if red_prob > blue_prob:
-                        top_ten[red_team] += 1
-                    else:
-                        top_ten[red_team] += + 0.5
-                        top_ten[blue_team] += 0.5
-                # 2nd round: change the sides
-                #
-                predict_single_game = predict.predict_on_single_game(red_team, blue_team)
-                blue_prob = predict_single_game.get(blue_team)
-                red_prob = predict_single_game.get(red_team)
-                if blue_prob > red_prob:
-                    top_ten[blue_team] += 1
-                else:
-                    if red_prob > blue_prob:
-                        top_ten[red_team] += 1
-                    else:
-                        top_ten[red_team] += 0.5
-                        top_ten[blue_team] += 0.5
-
-        #print("top ten unsorted : --- {}".format(top_ten))
-        sorted_teams_and_wins = sorted(top_ten.items(),  key=operator.itemgetter(1), reverse=True) #tuples
-        #print("top ten sorted : --- {}".format(sorted_teams_and_wins))
-        a = range(1, len(sorted_teams_and_wins) + 1)
-        tt = zip(sorted_teams_and_wins, a)
-
-        #print("top ten sorted + rank: --- {}".format(tt))
-        #delete all records 1st:
-        TopTenTeam.objects.all().delete()
-
-        for item, r in tt:
-            t10 = TopTenTeam.objects.create(name = item[0], score = item[1], rank = r)
-
-        #well, not returning anything
-        #sorted_teams = [ x[0] for x in sorted_teams_and_wins ]
-        #print("sorted list : --- {}".format(sorted_teams))
-        #return sorted_teams
 
     def submit_player_form_valid(self, form):
         engine = self.get_engine()
