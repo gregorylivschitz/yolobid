@@ -2,17 +2,6 @@ import operator
 from dashboard.models import TopTenTeam, Team
 from dashboard.service.predict_team_outcome import PredictTeamWin
 
-#Greg:
-#I want the data like this:
-#{
-#"data":
-#    "sorted_teams":[
-#        {"name":"TSM", "rank":1, "points":85},
-#        {"name":"CLG", "rank":2, "points":82},
-#        {"name":"IMMORTALS", "rank":3, "points":80},
-#    ]
-#}
-
 class TopTenTeamService:
 
     def __init__(self, engine):

@@ -167,8 +167,9 @@ class DashBoardView(MultiFormsView):
             if predict.is_loaded:
                 top_teams = topTen.top_ten_teams()
 
-            top_teams = topTen.top_ten_teams()
-            TopTenTeamsView().top_ten_view()
+            #just to test it
+            #top_teams = topTen.top_ten_teams()
+            #TopTenTeamsView().top_ten_view()
 
             morris_chart_data = []
             print('making morris chart')
